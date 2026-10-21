@@ -2,12 +2,24 @@
 
 **Fecha:** 2026-10-21
 
-**Idea principal:** la calidad de lo que entrega la IA depende más de cómo
-la configuramos que del modelo. Con dos archivos, un archivo de reglas y una
-skill, el salto de calidad se nota desde el primer día.
+## Qué hay en esta carpeta
 
-Material: [diapositivas](diapositivas.html) ([PDF](diapositivas.pdf)) y
-[la demo](demo/).
+| | Qué es |
+|---|---|
+| [diapositivas.html](diapositivas.html) | Las diapositivas. Se abren con doble clic; flechas para avanzar, F11 pantalla completa. |
+| [diapositivas.pdf](diapositivas.pdf) | Las mismas, en PDF. |
+| [demo/](demo/) | El experimento con y sin configuración, listo para repetirlo. |
+| [plantillas/AGENTS.md](plantillas/AGENTS.md) | Plantilla del archivo de reglas para su proyecto. |
+| [plantillas/CLAUDE.md](plantillas/CLAUDE.md) | Puente para Claude Code que importa el AGENTS.md. |
+| [plantillas/skill-ejemplo/](plantillas/skill-ejemplo/SKILL.md) | Cómo se ve una skill por dentro. |
+
+Abajo están los apuntes de la sesión.
+
+## La idea principal
+
+La calidad de lo que entrega la IA depende más de cómo la configuramos que
+del modelo. Con dos archivos, un archivo de reglas y una skill, el salto de
+calidad se nota desde el primer día.
 
 ## 1. La IA no conoce su proyecto
 
@@ -49,7 +61,7 @@ conversación. Cada herramienta le pone su nombre:
 `AGENTS.md`. Claude Code lo lee directo cuando no hay `CLAUDE.md` (desde la
 versión 2.1.277). Si alguien necesita reglas solo para Claude, crea un
 `CLAUDE.md` con la línea `@AGENTS.md` al inicio, que importa el compartido
-sin duplicarlo (ver [plantillas/CLAUDE.md](../plantillas/CLAUDE.md)).
+sin duplicarlo (ver [plantillas/CLAUDE.md](plantillas/CLAUDE.md)).
 
 ### Qué va y qué no
 
@@ -108,7 +120,7 @@ Una sola corrida es una anécdota, porque la IA no da siempre el mismo
 resultado. Las reglas suben el piso, no garantizan el techo. La prueba real
 es usarlas en su propio código.
 
-Todo lo necesario para repetirla está en [demo/](demo/).
+Todo lo necesario para repetirla, el prompt y la rúbrica están en [demo/](demo/).
 
 ## 6. Seguridad desde el día 1
 
@@ -119,7 +131,7 @@ Todo lo necesario para repetirla está en [demo/](demo/).
 
 ## Ejercicio
 
-1. Abran su proyecto real y generen un borrador con `/init`, o copien [plantillas/AGENTS.md](../plantillas/AGENTS.md).
+1. Abran su proyecto real y generen un borrador con `/init`, o copien [plantillas/AGENTS.md](plantillas/AGENTS.md).
 2. Dejen solo lo útil y agreguen 3 reglas que hoy le repiten a mano a la IA.
 3. Pídanle una tarea pequeña real y miren si las respeta.
 
