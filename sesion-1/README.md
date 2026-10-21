@@ -47,3 +47,20 @@ ver la lista de gastos y ver el total por categoría.
 ```
 
 5. Comparen: ¿funciona sin tocar nada?, ¿tiene tests y pasan?, ¿pesos y fechas bien?, ¿diseño con intención?, ¿dependencias de más?, ¿se usa con teclado?
+
+## Resultados de la sesión
+
+Generados con el mismo prompt y la misma herramienta. Las apps se abren con
+doble clic.
+
+| | A, sin configuración | B, con configuración |
+|---|---|---|
+| App | [app-a.html](demo/resultados/app-a.html) | [app-b.html](demo/resultados/app-b.html) |
+| Captura | [a.png](demo/resultados/a.png) | [b.png](demo/resultados/b.png) |
+| Código | [codigo-a](demo/resultados/codigo-a/) | [codigo-b](demo/resultados/codigo-b/) |
+| Qué construyó | Un solo archivo HTML | React + Vite + TypeScript, como pedía el AGENTS.md |
+| Tests | No tiene | 3 tests, pasan con `npm test` |
+| Estructura | Todo en un archivo | `src/features/gastos/`, lógica separada de la interfaz |
+| Fechas en la lista | DD/MM/AAAA | AAAA-MM-DD, como pedía el AGENTS.md |
+
+Para correr B desde el código: `cd sesion-1/demo/resultados/codigo-b && npm install && npm run dev`.
