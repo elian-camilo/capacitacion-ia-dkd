@@ -1,145 +1,49 @@
 # Sesión 1: reglas y skills
 
-**Fecha:** 2026-10-21
+2026-10-21 · [Diapositivas (PDF)](diapositivas.pdf) · [Diapositivas (HTML)](diapositivas.html)
 
-## Qué hay en esta carpeta
+## Qué vimos
 
-| | Qué es |
-|---|---|
-| [diapositivas.html](diapositivas.html) | Las diapositivas. Se abren con doble clic; flechas para avanzar, F11 pantalla completa. |
-| [diapositivas.pdf](diapositivas.pdf) | Las mismas, en PDF. |
-| [demo/](demo/) | El experimento con y sin configuración, listo para repetirlo. |
-| [plantillas/AGENTS.md](plantillas/AGENTS.md) | Plantilla del archivo de reglas para su proyecto. |
-| [plantillas/CLAUDE.md](plantillas/CLAUDE.md) | Puente para Claude Code que importa el AGENTS.md. |
-| [plantillas/skill-ejemplo/](plantillas/skill-ejemplo/SKILL.md) | Cómo se ve una skill por dentro. |
+1. **La IA no conoce su proyecto.** Sabe programar, pero lo que no le dicen lo adivina, y adivina lo más genérico.
+2. **Reglas:** un archivo en la raíz del repo que la IA lee al empezar cada conversación. `AGENTS.md` lo leen casi todas las herramientas; `CLAUDE.md` es el de Claude Code.
+3. **Qué va en las reglas:** stack, comandos, acuerdos que no son obvios y lo que nunca debe hacer. Corto: lo que hoy le repiten a mano.
+4. **Skills:** carpetas con un `SKILL.md` que la IA abre solo cuando la tarea lo necesita. La descripción es lo que decide si la abre.
+5. **Seguridad:** permisos en modo aprobar, nada de secretos en las reglas, revisar el diff antes del commit.
 
-Abajo están los apuntes de la sesión.
+Si usan Claude Code y Codex en el mismo repo: un solo `AGENTS.md`. Si
+necesitan algo solo para Claude, un `CLAUDE.md` que empiece con:
 
-## La idea principal
-
-La calidad de lo que entrega la IA depende más de cómo la configuramos que
-del modelo. Con dos archivos, un archivo de reglas y una skill, el salto de
-calidad se nota desde el primer día.
-
-## 1. La IA no conoce su proyecto
-
-La IA es como un desarrollador senior que llega nuevo cada mañana y no se
-acuerda de nada. Sabe programar, pero no conoce su proyecto, su stack ni los
-acuerdos del equipo. Lo que no le dicen, lo adivina, y adivina lo más
-genérico.
-
-Por eso existen dos piezas:
-- **Reglas:** el onboarding que le darían a alguien nuevo. Se lee siempre.
-- **Skills:** los manuales de procedimiento que consulta cuando le toca una tarea específica.
-
-## 2. Chat, editor o agente
-
-| Dónde | Ve el proyecto | Corre comandos | Ejemplos |
-|---|---|---|---|
-| Chat en el navegador | No, se copia y pega | No | ChatGPT, Claude.ai |
-| Editor | Los archivos abiertos | Poco | Copilot, Cursor |
-| Agente (terminal o app) | Todo el repo | Sí: tests, build, git | Claude Code, Codex |
-
-El agente es donde más se nota la configuración, porque lee el repo, corre
-los tests y se corrige solo. La terminal y la aplicación de escritorio son la
-misma herramienta con distinta cara.
-
-## 3. Reglas: el archivo que la IA lee al empezar
-
-Un archivo en la raíz del repo que la IA lee completo al empezar cada
-conversación. Cada herramienta le pone su nombre:
-
-| Archivo | Lo leen |
-|---|---|
-| `AGENTS.md` | Codex, Cursor, Copilot, Claude Code y la mayoría |
-| `CLAUDE.md` | Claude Code |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `.cursor/rules/` | Cursor |
-| `GEMINI.md` | Gemini CLI (se puede configurar para leer `AGENTS.md`) |
-
-**Recomendación para un equipo con varias herramientas:** un solo
-`AGENTS.md`. Claude Code lo lee directo cuando no hay `CLAUDE.md` (desde la
-versión 2.1.277). Si alguien necesita reglas solo para Claude, crea un
-`CLAUDE.md` con la línea `@AGENTS.md` al inicio, que importa el compartido
-sin duplicarlo (ver [plantillas/CLAUDE.md](plantillas/CLAUDE.md)).
-
-### Qué va y qué no
-
-| Sí va | No va |
-|---|---|
-| Stack y versiones | Lo que ya hace el linter o el formateador |
-| Comandos: correr, testear, lint | Reglas vagas como "escribe buen código" |
-| Acuerdos que no son obvios (estructura, nombres, idioma) | Más de unas 200 líneas: gasta contexto y la IA respeta menos cada regla |
-| Lo que nunca debe hacer | Secretos, tokens o claves |
-
-Regla práctica: si se lo tienen que repetir a la IA más de dos veces, va al
-archivo. Si aplicaría a cualquier proyecto del mundo, no aporta.
-
-### Dos niveles
-
-- **Proyecto:** en la raíz del repo, versionado en git. Lo comparte todo el equipo.
-- **Personal:** en su carpeta de usuario (`~/.claude/CLAUDE.md` en Claude Code, `~/.codex/AGENTS.md` en Codex). Sus preferencias: idioma, tono, cómo les gusta que les expliquen.
-
-`/init` (en Claude Code y Codex) lee el repo y escribe un primer borrador.
-Se edita, no se acepta tal cual.
-
-## 4. Skills: manuales que se abren cuando hacen falta
-
-Una skill es una carpeta con un archivo `SKILL.md`: instrucciones, ejemplos y
-scripts para una tarea específica.
-
-```text
-.claude/skills/frontend-design/     (Claude Code)
-.agents/skills/frontend-design/     (Codex)
-  SKILL.md
-  ...
+```markdown
+@AGENTS.md
 ```
-
-La diferencia clave con las reglas:
-- **Reglas:** entran completas en cada conversación. Por eso tienen que ser cortas.
-- **Skills:** al empezar, la IA solo ve el nombre y la descripción de cada una. Abre el contenido completo cuando la tarea lo necesita. Por eso una skill puede ser larga sin estorbar.
-
-Por lo mismo, **la descripción es lo más importante de una skill**: la IA
-decide si la abre leyendo solo esa línea. Tiene que decir qué hace y cuándo
-usarla.
-
-`SKILL.md` es un formato abierto: lo leen Claude Code, Codex, Cursor, Copilot
-y Gemini CLI. Cambia la carpeta, no el archivo.
-
-**Primero instalar, después crear.** Hay muchas skills públicas listas
-(https://skills.sh). Una skill de terceros es código ajeno corriendo en su
-máquina: se lee antes de instalarla, como cualquier dependencia.
-
-## 5. La demo: mismo prompt, con y sin configuración
-
-Le pedimos lo mismo a la misma IA dos veces: una en una carpeta vacía y otra
-en una carpeta con un `AGENTS.md` y la skill `frontend-design`. Después
-comparamos los resultados con una rúbrica.
-
-Una sola corrida es una anécdota, porque la IA no da siempre el mismo
-resultado. Las reglas suben el piso, no garantizan el techo. La prueba real
-es usarlas en su propio código.
-
-Todo lo necesario para repetirla, el prompt y la rúbrica están en [demo/](demo/).
-
-## 6. Seguridad desde el día 1
-
-- Permisos en modo aprobar. Nada de saltarse todos los permisos.
-- Ningún secreto, token ni clave en los archivos de reglas.
-- Revisar el diff antes de cada commit.
-- El código lo firma quien hace el commit, no la IA.
 
 ## Ejercicio
 
-1. Abran su proyecto real y generen un borrador con `/init`, o copien [plantillas/AGENTS.md](plantillas/AGENTS.md).
+1. En su proyecto real, generen un borrador con `/init` o copien [plantilla-AGENTS.md](plantilla-AGENTS.md).
 2. Dejen solo lo útil y agreguen 3 reglas que hoy le repiten a mano a la IA.
 3. Pídanle una tarea pequeña real y miren si las respeta.
 
 ## Tarea para la sesión 2
 
-Usen su archivo de reglas en el trabajo de la semana y anoten:
-- Una vez en que la IA no respetó una regla.
-- Algo que tuvieron que repetirle y que debería estar en el archivo.
+Usen su archivo de reglas esta semana y anoten una vez en que la IA no lo
+respetó y algo que tuvieron que repetirle.
 
-Lo revisamos al empezar la próxima sesión, que trata de por qué la IA "se
-olvida" de cosas en conversaciones largas y cuánto cuesta eso en tokens.
+## Repetir la demo
+
+Mismo prompt en dos carpetas: [a-sin-nada](demo/a-sin-nada/) (vacía) y
+[b-configurado](demo/b-configurado/) (un [AGENTS.md](demo/b-configurado/AGENTS.md)
+y la skill `frontend-design` en las carpetas ocultas `.claude/skills/` y
+`.agents/skills/`).
+
+1. Usen Claude Code o Codex **sin reglas, skills ni plugins globales**, o las dos corridas salen configuradas.
+2. Copien las carpetas fuera del repo: `mkdir -p ~/demo-dkd && cp -r sesion-1/demo/* ~/demo-dkd/`
+3. En dos terminales, abran `claude` (o `codex`) en cada carpeta.
+4. Peguen en las dos este prompt:
+
+```text
+Crea una app web para registrar los gastos de caja menor de una oficina.
+Debe permitir agregar un gasto (fecha, descripción, categoría y valor),
+ver la lista de gastos y ver el total por categoría.
+```
+
+5. Comparen: ¿funciona sin tocar nada?, ¿tiene tests y pasan?, ¿pesos y fechas bien?, ¿diseño con intención?, ¿dependencias de más?, ¿se usa con teclado?
