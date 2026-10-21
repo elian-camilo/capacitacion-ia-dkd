@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La IA no conoce tu proyecto · DKD sesión 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   THEME
+   Neutral, sober, one accent. Co-branded deck:
+   Carlos René Angarita y Elian Camilo Angarita.
+   =========================================== */
+:root {
+  --stage-bg: #d8d6d1;
+  --slide-bg: #f6f5f2;
+  --ink: #17181b;
+  --ink-2: #4b4e55;
+  --ink-3: #8a8d93;
+  --rule: #d9d7d1;
+  --panel: #ffffff;
+  --code-bg: #1b1c1f;
+  --code-ink: #e7e5e0;
+  --code-dim: #8b8e94;
+  --accent: #1d5bd6;
+  --font: 'Geist', 'Helvetica Neue', sans-serif;
+  --mono: 'Geist Mono', 'Courier New', monospace;
+  --pad-x: 140px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === FIXED STAGE (viewport-base.css, full) === */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; background: var(--slide-bg, #fff); }
+.slide { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; display: block; visibility: hidden; opacity: 0; pointer-events: none; background: var(--slide-bg, #fff); }
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+.deck-controls { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 1000; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+  .deck-viewport { position: static; overflow: visible; background: #fff; }
+  .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+  .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .deck-controls, .notes-panel, .counter { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* === BASE SLIDE TYPOGRAPHY === */
+.slide { font-family: var(--font); color: var(--ink); }
+.slide .notes { display: none; }
+.wrap { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 120px; bottom: 150px; display: flex; flex-direction: column; }
+h1 { font-weight: 700; font-size: 150px; line-height: 0.95; letter-spacing: -0.045em; }
+h2 { font-weight: 600; font-size: 76px; line-height: 1.04; letter-spacing: -0.03em; max-width: 1400px; }
+h3 { font-weight: 600; font-size: 40px; line-height: 1.15; letter-spacing: -0.015em; }
+p, li, td, th { font-size: 34px; line-height: 1.4; }
+.lead { font-size: 44px; line-height: 1.3; color: var(--ink-2); max-width: 1300px; letter-spacing: -0.01em; }
+.muted { color: var(--ink-2); }
+.accent { color: var(--accent); }
+.mono { font-family: var(--mono); }
+
+/* Running footer: same on every content slide */
+.foot { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 64px; display: flex; justify-content: space-between; font-size: 22px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 20px; }
+
+/* Thin-ruled lists instead of cards */
+.ruled { list-style: none; border-top: 1px solid var(--rule); }
+.ruled li { display: grid; grid-template-columns: 360px 1fr; gap: 48px; padding: 30px 0; border-bottom: 1px solid var(--rule); }
+.ruled li b { font-weight: 600; }
+.ruled.wide li { grid-template-columns: 90px 1fr; }
+.ruled .n { font-family: var(--mono); color: var(--accent); font-size: 30px; padding-top: 4px; }
+
+/* Plain tables with rules */
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-weight: 500; font-size: 24px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 24px 18px 0; border-bottom: 2px solid var(--ink); }
+td { padding: 24px 24px 24px 0; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 32px; }
+td.code { font-family: var(--mono); font-size: 28px; }
+table.compact td { padding-top: 16px; padding-bottom: 16px; }
+tr.hl td { font-weight: 600; }
+tr.hl td:first-child { color: var(--accent); }
+
+/* Editor window with real file content */
+.editor { background: var(--code-bg); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+.editor .bar { display: flex; align-items: center; gap: 12px; padding: 18px 26px; background: #232428; font-family: var(--mono); font-size: 22px; color: var(--code-dim); }
+.editor .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3b40; display: inline-block; }
+.editor .bar span { margin-left: 14px; }
+.editor pre { font-family: var(--mono); font-size: 25px; line-height: 1.55; color: var(--code-ink); padding: 30px 36px 34px; white-space: pre-wrap; }
+.editor .h { color: #8fb1ff; }
+.editor .c { color: var(--code-dim); }
+
+/* Screenshot slots for the live demo */
+.shot { position: relative; flex: 1; border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.shot img { width: 100%; height: 100%; object-fit: contain; }
+.shot .ph { font-family: var(--mono); font-size: 24px; color: var(--ink-3); text-align: center; line-height: 1.5; }
+.shot .tag { position: absolute; left: 24px; top: 20px; font-family: var(--mono); font-size: 26px; background: var(--ink); color: var(--slide-bg); padding: 6px 16px; border-radius: 6px; }
+
+/* Reveal animation on slide entry */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.slide.visible .reveal { opacity: 1; transform: none; }
+.slide.visible .reveal.d1 { transition-delay: .08s; }
+.slide.visible .reveal.d2 { transition-delay: .16s; }
+.slide.visible .reveal.d3 { transition-delay: .24s; }
+.slide.visible .reveal.d4 { transition-delay: .32s; }
+
+/* === SLIDE-SPECIFIC === */
+.cover .names { position: absolute; left: var(--pad-x); bottom: 96px; display: flex; gap: 120px; font-size: 30px; line-height: 1.35; }
+.cover .names small { display: block; font-size: 22px; color: var(--ink-3); margin-bottom: 8px; letter-spacing: 0.04em; }
+.cover .top { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 96px; display: flex; justify-content: space-between; font-size: 26px; color: var(--ink-2); }
+.cover h1 { position: absolute; left: var(--pad-x); top: 300px; width: 1500px; }
+.cover .lead { position: absolute; left: var(--pad-x); top: 640px; }
+.cover .rule { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 230px; height: 1px; background: var(--rule); }
+
+.dark { background: var(--ink); color: var(--slide-bg); }
+.dark .lead { color: #b9bbc0; }
+.dark .foot { color: #6d7077; border-color: #2c2e33; }
+.statement h2 { font-size: 104px; max-width: 1560px; }
+
+.prompt { font-size: 52px; line-height: 1.3; letter-spacing: -0.015em; max-width: 1500px; border-left: 4px solid var(--accent); padding-left: 48px; }
+.term { font-family: var(--mono); font-size: 28px; color: var(--ink-2); line-height: 1.7; }
+.term b { color: var(--ink); font-weight: 500; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; }
+.cols h3 { padding-bottom: 20px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+.cols ul { list-style: none; }
+.cols li { padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.cols li s { text-decoration: none; color: var(--ink-3); }
+
+/* Context-loading diagram: what the AI reads when a session starts */
+.ctx { display: flex; gap: 0; height: 120px; border: 1px solid var(--ink); border-radius: 10px; overflow: hidden; font-family: var(--mono); font-size: 22px; }
+.ctx div { display: flex; align-items: center; padding: 0 18px; border-right: 1px solid var(--ink); white-space: nowrap; }
+.ctx div:last-child { border-right: none; }
+.ctx .rules { background: var(--ink); color: var(--slide-bg); flex: 0 0 380px; }
+.ctx .sk { background: #e7ecf8; color: var(--accent); flex: 0 0 auto; }
+.ctx .free { flex: 1; color: var(--ink-3); background: var(--panel); }
+.ctx-label { display: flex; justify-content: space-between; font-size: 24px; color: var(--ink-3); margin-top: 16px; }
+
+.steps { list-style: none; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 120px 1fr; padding: 34px 0; border-bottom: 1px solid var(--rule); font-size: 40px; line-height: 1.3; }
+.steps li::before { content: counter(s); font-weight: 700; font-size: 64px; line-height: 1; color: var(--accent); letter-spacing: -0.03em; }
+
+/* === CHROME OUTSIDE THE STAGE === */
+.counter { position: fixed; right: 18px; bottom: 14px; z-index: 1000; font: 500 13px var(--mono); color: #6b6d72; }
+.notes-panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 38vh; overflow: auto; z-index: 1001; background: rgba(23,24,27,.95); color: #e7e5e0; font: 400 16px/1.5 var(--font); padding: 18px 28px 26px; display: none; }
+.notes-panel.on { display: block; }
+.notes-panel b { font-family: var(--mono); font-size: 12px; color: #8b8e94; display: block; margin-bottom: 6px; }
+body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); outline-offset: 4px; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- === 01 PORTADA === -->
+<section class="slide cover">
+  <div class="top reveal"><span>Capacitación de IA · Sesión 1</span><span>DKD · 2026-10-21</span></div>
+  <h1 class="reveal d1">La IA no conoce<br>tu proyecto.</h1>
+  <p class="lead reveal d2">Reglas y skills: lo más barato que pueden hacer para que les entregue mejor código.</p>
+  <div class="rule"></div>
+  <div class="names reveal d3">
+    <div><small>Con</small>Carlos René Angarita Sanguino</div>
+    <div><small>&nbsp;</small>Elian Camilo Angarita Sanguino</div>
+  </div>
+  <aside class="notes">Presentación corta de los dos. Es una serie de sesiones; hoy es lo básico. Pasar enseguida a lanzar la demo.</aside>
+</section>
+
+<!-- === 02 EL EXPERIMENTO === -->
+<section class="slide">
+  <div class="wrap" style="justify-content:center;gap:64px">
+    <p class="muted reveal" style="font-size:30px">Este prompt lo acabamos de lanzar dos veces, a la misma IA:</p>
+    <p class="prompt reveal d1">Crea una app web para registrar los gastos de caja menor de una oficina. Debe permitir agregar un gasto (fecha, descripción, categoría y valor), ver la lista y el total por categoría.</p>
+    <div class="term reveal d2">
+      <div>~/demo-dkd/<b>a-sin-nada</b>&nbsp;&nbsp;&nbsp;&nbsp;carpeta vacía</div>
+      <div>~/demo-dkd/<b>b-configurado</b>&nbsp;un archivo de reglas y una skill</div>
+    </div>
+    <p class="lead reveal d3">En una hora vemos qué salió.</p>
+  </div>
+  <div class="foot"><span>El experimento</span><span>02</span></div>
+  <aside class="notes">Lanzar YA las dos corridas, en las dos terminales del mismo portátil. No mostrar todavía el contenido de B. Esto quita el tiempo muerto de esperar a que genere.</aside>
+</section>
+
+<!-- === 03 DIAGNÓSTICO === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Primero, ustedes. ¿Cómo usan la IA hoy?</h2>
+    <ul class="ruled reveal d1">
+      <li><b>Herramienta</b><span class="muted">ChatGPT, Copilot, Cursor, Claude. ¿Desde el navegador, el editor o la terminal?</span></li>
+      <li><b>Última vez</b><span class="muted">¿Qué le pidieron, qué salió y qué tuvieron que corregir?</span></li>
+      <li><b>Lo que más fastidia</b><span class="muted">Eso que hace que a veces prefieran escribirlo ustedes.</span></li>
+      <li><b>Tiempo de hoy</b><span class="muted">¿Cuánto les toma un endpoint, una pantalla o un CRUD típico?</span></li>
+    </ul>
+  </div>
+  <div class="foot"><span>Diagnóstico</span><span>03</span></div>
+  <aside class="notes">Ronda rápida, 20 minutos. Anotar en el tablero: herramienta, tarea, frustración. No corregir a nadie todavía. El tiempo de hoy es la línea base: sin ella, al final no hay cómo demostrar ahorro. Conectar frustraciones con sesiones futuras (se le olvida = contexto; hace lo que quiere = reglas).</aside>
+</section>
+
+<!-- === 04 IDEA CENTRAL === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">La IA es un dev senior que llega nuevo cada mañana y no se acuerda de nada.</h2>
+    <p class="lead reveal d1">Sabe programar. No sabe nada de su proyecto, su stack ni sus acuerdos. Lo que no le dicen, lo adivina, y adivina lo más genérico.</p>
+  </div>
+  <div class="foot"><span>La idea de hoy</span><span>04</span></div>
+  <aside class="notes">Toda la sesión cuelga de esta idea. Las reglas son el onboarding que le darían a un dev nuevo. Las skills son los manuales que consulta cuando le toca una tarea específica.</aside>
+</section>
+
+<!-- === 05 SUPERFICIES === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Chat, editor o agente: cambia cuánto ve de su código.</h2>
+    <table class="reveal d1">
+      <tr><th style="width:30%">Dónde</th><th style="width:26%">Ve el proyecto</th><th style="width:22%">Corre comandos</th><th>Ejemplos</th></tr>
+      <tr><td>Chat en el navegador</td><td>No, copian y pegan</td><td>No</td><td class="muted">ChatGPT, Claude.ai</td></tr>
+      <tr><td>Editor</td><td>Los archivos abiertos</td><td>Poco</td><td class="muted">Copilot, Cursor</td></tr>
+      <tr class="hl"><td>Agente</td><td>Todo el repo</td><td>Tests, build, git</td><td>Claude Code, Codex</td></tr>
+    </table>
+    <p class="muted reveal d2" style="font-size:30px">Terminal o app de escritorio: es la misma herramienta con otra cara.</p>
+  </div>
+  <div class="foot"><span>Dónde se usa</span><span>05</span></div>
+  <aside class="notes">El agente lee el repo, corre comandos, ejecuta los tests y se corrige solo. Ahí es donde más se nota la configuración. Si nadie usa agente, mostrar la terminal en vivo un minuto.</aside>
+</section>
+
+<!-- === 06 SEGURIDAD === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Antes de seguir: el agente corre comandos en su máquina.</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span>Permisos en modo aprobar. Nada de saltarse todos los permisos.</span></li>
+      <li><span class="n">02</span><span>Ningún secreto, token ni clave en los archivos de reglas.</span></li>
+      <li><span class="n">03</span><span>Revisar el diff antes de cada commit.</span></li>
+      <li><span class="n">04</span><span>El código lo firma quien hace el commit, no la IA.</span></li>
+    </ul>
+  </div>
+  <div class="foot"><span>Seguridad</span><span>06</span></div>
+  <aside class="notes">Dos minutos. Desde hoy van a correr IA sobre código de clientes. Lo profundo de gobierno queda para la última sesión.</aside>
+</section>
+
+<!-- === 07 REGLAS === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <p class="mono reveal" style="font-size:28px;color:#8b8e94">Parte 1 · Reglas</p>
+    <h2 class="reveal d1">Un archivo en la raíz del repo que la IA lee al empezar cada conversación.</h2>
+    <p class="lead reveal d2">Es el onboarding. Lo escriben una vez y deja de tocarles repetir lo mismo.</p>
+  </div>
+  <div class="foot"><span>Reglas</span><span>07</span></div>
+  <aside class="notes">Si a un dev nuevo le dan un documento de onboarding el primer día, a la IA también. La diferencia: la IA lo lee entero cada vez.</aside>
+</section>
+
+<!-- === 08 NOMBRES === -->
+<section class="slide">
+  <div class="wrap" style="gap:48px">
+    <h2 class="reveal">Cada herramienta le pone su nombre. La idea es la misma.</h2>
+    <table class="compact reveal d1">
+      <tr><th style="width:44%">Archivo</th><th>Lo leen</th></tr>
+      <tr class="hl"><td class="code">AGENTS.md</td><td>Codex, Cursor, Copilot, Claude Code y la mayoría</td></tr>
+      <tr><td class="code">CLAUDE.md</td><td>Claude Code</td></tr>
+      <tr><td class="code">.github/copilot-instructions.md</td><td>GitHub Copilot</td></tr>
+      <tr><td class="code">.cursor/rules/</td><td>Cursor</td></tr>
+      <tr><td class="code">GEMINI.md</td><td>Gemini CLI, que se puede apuntar a AGENTS.md</td></tr>
+    </table>
+    <p class="reveal d2" style="font-size:32px">Para un equipo con varias herramientas: <b>un solo AGENTS.md</b>. Si alguien necesita algo solo para Claude, un CLAUDE.md con la línea <span class="mono accent">@AGENTS.md</span>.</p>
+  </div>
+  <div class="foot"><span>Reglas · nombres</span><span>08</span></div>
+  <aside class="notes">AGENTS.md es el estándar abierto. Claude Code lo lee directo desde la v2.1.277 cuando no hay CLAUDE.md; si hay CLAUDE.md, lee solo ese, por eso el import con @AGENTS.md. Así no mantienen dos archivos con lo mismo.</aside>
+</section>
+
+<!-- === 09 QUÉ VA === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Lo que hoy le repiten a mano, va en el archivo.</h2>
+    <div class="cols reveal d1">
+      <div>
+        <h3>Sí va</h3>
+        <ul>
+          <li>Stack y versiones</li>
+          <li>Comandos: correr, testear, lint</li>
+          <li>Acuerdos que no son obvios</li>
+          <li>Lo que nunca debe hacer</li>
+        </ul>
+      </div>
+      <div>
+        <h3>No va</h3>
+        <ul>
+          <li><s>Lo que ya hace el linter</s></li>
+          <li><s>“Escribe buen código”</s></li>
+          <li><s>Más de 200 líneas</s></li>
+          <li><s>Secretos</s></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Reglas · contenido</span><span>09</span></div>
+  <aside class="notes">Si se lo repiten más de dos veces, va al archivo. Si aplica a cualquier proyecto del mundo, no aporta. La documentación de Claude recomienda menos de 200 líneas: más largo gasta contexto y respeta menos cada regla. Gancho para la sesión de contexto.</aside>
+</section>
+
+<!-- === 10 EL ARCHIVO REAL === -->
+<section class="slide">
+  <div class="wrap" style="flex-direction:row;gap:96px;align-items:center">
+    <div style="flex:0 0 560px;display:flex;flex-direction:column;gap:40px">
+      <h2 class="reveal" style="font-size:68px">Este es el archivo de la carpeta B.</h2>
+      <p class="lead reveal d1" style="font-size:36px">Lo mismo que le explicarían a alguien nuevo el primer día. Se escribe en 20 minutos.</p>
+    </div>
+    <div class="editor reveal d2" style="flex:1">
+      <div class="bar"><i></i><i></i><i></i><span>b-configurado/AGENTS.md</span></div>
+<pre><span class="h"># Caja menor</span>
+App interna para una oficina en Colombia.
+
+<span class="h">## Stack</span>
+- React 18 + Vite + TypeScript estricto.
+- Tests con Vitest + Testing Library.
+- CSS plano. Sin librerías de UI. Datos en localStorage.
+
+<span class="h">## Comandos</span>
+- npm test: deben pasar antes de terminar.
+
+<span class="h">## Convenciones</span>
+- Lógica en funciones puras, cada una con test.
+- Interfaz en español de Colombia.
+- Pesos con Intl.NumberFormat('es-CO', COP).
+- Fechas AAAA-MM-DD. Todo campo con su label.
+
+<span class="h">## Nunca</span>
+- Agregar dependencias sin preguntar.</pre>
+    </div>
+  </div>
+  <div class="foot"><span>Reglas · ejemplo</span><span>10</span></div>
+  <aside class="notes">Versión resumida del AGENTS.md de la demo; el completo está en el material. Leerlo en voz alta.</aside>
+</section>
+
+<!-- === 11 NIVELES === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Dos niveles: lo del equipo y lo de cada uno.</h2>
+    <ul class="ruled reveal d1">
+      <li><b>Proyecto</b><span class="muted">En la raíz del repo, en git. Lo comparte todo el equipo.</span></li>
+      <li><b>Personal</b><span class="muted">En su carpeta de usuario: idioma, tono, cómo le gusta que le expliquen.</span></li>
+    </ul>
+    <div class="reveal d2" style="display:flex;gap:40px;align-items:baseline">
+      <span class="mono accent" style="font-size:48px">/init</span>
+      <span style="font-size:34px">lee el repo y escribe un primer borrador. Se edita, no se acepta tal cual.</span>
+    </div>
+  </div>
+  <div class="foot"><span>Reglas · niveles</span><span>11</span></div>
+  <aside class="notes">Claude Code: ~/.claude/CLAUDE.md. Codex: ~/.codex/AGENTS.md. Claude Code y Codex tienen /init; en Copilot o Cursor se le pide lo mismo en el chat.</aside>
+</section>
+
+<!-- === 12 SKILLS === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <p class="mono reveal" style="font-size:28px;color:#8b8e94">Parte 2 · Skills</p>
+    <h2 class="reveal d1">Manuales que la IA abre solo cuando la tarea los necesita.</h2>
+    <p class="lead reveal d2">Una carpeta con un SKILL.md: instrucciones, ejemplos y scripts para una tarea específica.</p>
+  </div>
+  <div class="foot"><span>Skills</span><span>12</span></div>
+  <aside class="notes">Reglas: onboarding general. Skills: manuales de procedimiento. Cómo diseñar una interfaz, cómo armar un PDF, cómo escribir una migración en este equipo.</aside>
+</section>
+
+<!-- === 13 CARGA === -->
+<section class="slide">
+  <div class="wrap" style="gap:64px">
+    <h2 class="reveal">Lo que la IA carga al empezar una conversación.</h2>
+    <div class="reveal d1">
+      <div class="ctx">
+        <div class="rules">AGENTS.md completo</div>
+        <div class="sk">frontend-design</div>
+        <div class="sk">pdf</div>
+        <div class="sk">migraciones</div>
+        <div class="free">espacio libre para trabajar</div>
+      </div>
+      <div class="ctx-label"><span>Reglas: siempre, enteras. Por eso cortas.</span><span>Skills: solo nombre y descripción, hasta que hacen falta.</span></div>
+    </div>
+    <p class="lead reveal d2">Cuando la tarea es de diseño, abre frontend-design completo. Las demás ni las lee. Por eso una skill puede ser larga sin estorbar.</p>
+  </div>
+  <div class="foot"><span>Skills · carga</span><span>13</span></div>
+  <aside class="notes">Esto se llama carga progresiva. Mostrar la skill frontend-design de la carpeta B: leer la descripción del encabezado y un par de reglas internas.</aside>
+</section>
+
+<!-- === 14 INSTALAR === -->
+<section class="slide">
+  <div class="wrap" style="flex-direction:row;gap:96px;align-items:center">
+    <div style="flex:1;display:flex;flex-direction:column;gap:40px">
+      <h2 class="reveal" style="font-size:68px">Hoy se instala una. Crear las propias viene después.</h2>
+      <p class="lead reveal d1" style="font-size:34px">SKILL.md es un formato abierto: Claude Code, Codex, Cursor, Copilot y Gemini CLI lo leen. Cambia la carpeta, no el archivo.</p>
+      <p class="reveal d2" style="font-size:32px"><b>Ojo:</b> una skill de terceros es código ajeno. Se lee antes de instalar, como cualquier dependencia.</p>
+    </div>
+    <div class="editor reveal d2" style="flex:0 0 700px">
+      <div class="bar"><i></i><i></i><i></i><span>.claude/skills/frontend-design/SKILL.md</span></div>
+<pre><span class="c">---</span>
+name: frontend-design
+description: Guidance for distinctive,
+  intentional visual design when building
+  new UI or reshaping an existing one.
+<span class="c">---</span>
+
+<span class="h"># Frontend Design</span>
+Approach this as the design lead at a
+small studio known for giving every
+client a visual identity...</pre>
+    </div>
+  </div>
+  <div class="foot"><span>Skills · instalar</span><span>14</span></div>
+  <aside class="notes">La descripción es lo más importante: la IA decide abrir la skill leyendo solo esa línea. Carpetas: .claude/skills (Claude Code), .cursor/skills (Cursor), .gemini/skills (Gemini CLI); Codex y Copilot: revisar la documentación de su versión.</aside>
+</section>
+
+<!-- === 15 REVELACIÓN === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">¿Cuál le entregarían a un cliente?</h2>
+    <div class="reveal d1" style="flex:1;display:flex;gap:40px">
+      <div class="shot"><span class="tag">1</span><img src="demo-1.png" alt="Resultado 1 de la demo" onerror="this.remove()"><span class="ph">Resultado 1</span></div>
+      <div class="shot"><span class="tag">2</span><img src="demo-2.png" alt="Resultado 2 de la demo" onerror="this.remove()"><span class="ph">Resultado 2</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>La demo</span><span>15</span></div>
+  <aside class="notes">Votación a mano alzada SIN decir cuál es cuál. Si no hay capturas, abrir las dos apps en vivo lado a lado. Después revelar y pasar a la rúbrica.</aside>
+</section>
+
+<!-- === 16 RÚBRICA === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">La revisamos entre todos.</h2>
+    <table class="reveal d1">
+      <tr><th style="width:38%">Criterio</th><th style="width:38%">Cómo se mira</th><th style="width:12%">A</th><th>B</th></tr>
+      <tr><td>Funciona sin tocar nada</td><td class="code">npm run dev</td><td></td><td></td></tr>
+      <tr><td>Tiene tests y pasan</td><td class="code">npm test</td><td></td><td></td></tr>
+      <tr><td>Lógica separada y probada</td><td class="muted">abrir src/</td><td></td><td></td></tr>
+      <tr><td>Pesos y fechas bien</td><td class="muted">un gasto de 15000</td><td></td><td></td></tr>
+      <tr><td>Sin dependencias de más</td><td class="code">package.json</td><td></td><td></td></tr>
+      <tr><td>Accesible con teclado</td><td class="muted">tabular el formulario</td><td></td><td></td></tr>
+    </table>
+  </div>
+  <div class="foot"><span>La demo · rúbrica</span><span>16</span></div>
+  <aside class="notes">Que ellos encuentren las diferencias. Las casillas A y B se pueden llenar en vivo con la tecla E (modo edición). Si A gana en algo, mejor: la IA no es determinista y las reglas suben el piso, no garantizan el techo.</aside>
+</section>
+
+<!-- === 17 CIERRE DEMO === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">Mismo modelo. Mismo prompt. Dos archivos de diferencia.</h2>
+    <p class="lead reveal d1">Una corrida es una anécdota. Esta semana lo comprueban en su propio código.</p>
+  </div>
+  <div class="foot"><span>La demo</span><span>17</span></div>
+  <aside class="notes">Pausa después de la frase. Honestidad: una sola corrida no prueba nada, pero la diferencia se repite, y eso lo van a ver en la práctica.</aside>
+</section>
+
+<!-- === 18 PRÁCTICA === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">20 minutos, en su repo.</h2>
+    <ol class="steps reveal d1">
+      <li>Abran su proyecto real y saquen el borrador con /init o con la plantilla.</li>
+      <li>Dejen solo lo útil y agreguen 3 reglas que hoy le repiten a mano.</li>
+      <li>Pídanle una tarea pequeña de verdad y miren si las respeta.</li>
+    </ol>
+    <p class="muted reveal d2" style="font-size:30px">¿Solo Claude Code? CLAUDE.md. ¿Otra herramienta o equipo mixto? AGENTS.md.</p>
+  </div>
+  <div class="foot"><span>Práctica</span><span>18</span></div>
+  <aside class="notes">En parejas si alguien no tiene la herramienta. Pasar por los puestos. Errores típicos: archivo larguísimo, reglas vagas, reglas que contradicen el código que ya existe.</aside>
+</section>
+
+<!-- === 19 TAREA === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Para la próxima: usen su archivo y anoten dos cosas.</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span>Una vez en que la IA no respetó una regla.</span></li>
+      <li><span class="n">02</span><span>Algo que tuvieron que repetirle y que debería estar en el archivo.</span></li>
+    </ul>
+    <p class="lead reveal d2">Próxima sesión: por qué la IA “se olvida” de cosas en conversaciones largas, y cuánto cuesta eso en tokens.</p>
+  </div>
+  <div class="foot"><span>Carlos René Angarita · Elian Camilo Angarita</span><span>19</span></div>
+  <aside class="notes">Lo anotado se revisa en los primeros 10 minutos de la próxima sesión, y lo explican ellos. El gancho de contexto conecta con la regla de las 200 líneas.</aside>
+</section>
+
+</main>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="notes-panel" id="notesPanel"></div>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Keys: arrows / space / PgUp PgDn to move,
+   N = speaker notes, E = edit mode, Ctrl+S = save copy
+   =========================================== */
+class SlidePresentation {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.stage = document.getElementById('deckStage');
+    this.counter = document.getElementById('counter');
+    this.notes = document.getElementById('notesPanel');
+    this.current = 0;
+    this.lastWheel = 0;
+    this.setupScale();
+    this.setupKeys();
+    this.setupTouch();
+    this.setupWheel();
+    const start = parseInt(location.hash.slice(1), 10);
+    this.show(Number.isFinite(start) ? start - 1 : 0);
+  }
+
+  /* Fixed 1920x1080 stage, scaled as a whole */
+  setupScale() {
+    const fit = () => {
+      const f = Math.min(innerWidth / 1920, innerHeight / 1080);
+      this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
+    };
+    fit();
+    addEventListener('resize', fit);
+  }
+
+  setupKeys() {
+    addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.saveCopy(); return; }
+      if (document.body.classList.contains('editing') && e.key !== 'Escape') return;
+      if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+      if (e.key === 'Home') this.show(0);
+      if (e.key === 'End') this.show(this.slides.length - 1);
+      if (e.key.toLowerCase() === 'n') this.notes.classList.toggle('on');
+      if (e.key.toLowerCase() === 'e') this.toggleEdit();
+      if (e.key === 'Escape' && document.body.classList.contains('editing')) this.toggleEdit();
+    });
+  }
+
+  setupTouch() {
+    let x0 = null;
+    addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) this.show(this.current + (dx < 0 ? 1 : -1));
+      x0 = null;
+    });
+  }
+
+  setupWheel() {
+    addEventListener('wheel', (e) => {
+      const now = Date.now();
+      if (now - this.lastWheel < 700 || Math.abs(e.deltaY) < 30) return;
+      this.lastWheel = now;
+      this.show(this.current + (e.deltaY > 0 ? 1 : -1));
+    }, { passive: true });
+  }
+
+  show(i) {
+    this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+    this.slides.forEach((s, k) => {
+      s.classList.toggle('active', k === this.current);
+      s.classList.toggle('visible', k === this.current);
+    });
+    this.counter.textContent = `${this.current + 1} / ${this.slides.length}`;
+    history.replaceState(null, '', `#${this.current + 1}`);
+    const note = this.slides[this.current].querySelector('.notes');
+    this.notes.innerHTML = `<b>NOTAS · ${this.current + 1}</b>${note ? note.textContent : ''}`;
+  }
+
+  /* Inline editing: E toggles, Esc exits */
+  toggleEdit() {
+    const on = document.body.classList.toggle('editing');
+    document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide td').forEach((el) => {
+      el.contentEditable = on ? 'true' : 'false';
+    });
+  }
+
+  /* Ctrl+S downloads the edited deck as a new HTML file */
+  saveCopy() {
+    const wasEditing = document.body.classList.contains('editing');
+    if (wasEditing) this.toggleEdit();
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.download = 'sesion-01.html';
+    a.click();
+    if (wasEditing) this.toggleEdit();
+  }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>
