@@ -18,7 +18,8 @@
 | Ver el consumo | `/usage` | Configuración > Uso |
 | Arrancar limpio (gratis) | `/clear` | Nueva conversación |
 | Resumir (petición grande) | `/compact conserva ...` | no aplica |
-| Guardar y volver | `/rename` y `/resume` | |
+| Volver a una conversación anterior (`/clear` no la borra) | `/resume`; `/rename` le pone nombre | |
+| Regresar a un mensaje anterior (conversación, código o ambos) | `/rewind` o `Esc` dos veces | |
 
 ¿Siguen con lo mismo? `/compact`. ¿Cambian de tarea? `/clear`.
 
@@ -28,7 +29,7 @@
 2. Pedidos específicos: nombren el archivo.
 3. Peguen el error, no el log entero.
 4. Reglas cortas: menos de 200 líneas; lo especializado, a una skill.
-5. Si va por mal camino, `Esc` y corregir, o `/rewind`.
+5. Si va por mal camino, `Esc` y corregir, o `/rewind` para volver a un mensaje anterior.
 6. Lo ruidoso (tests, documentación), a un subagente. Sesión 4.
 
 ## Ejercicio

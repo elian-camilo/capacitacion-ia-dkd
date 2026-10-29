@@ -249,6 +249,15 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
 
 .tip { font-size: 30px; color: var(--ink-2); }
 .src-note { font-size: 22px; color: var(--ink-3); }
+
+/* Drawn desk */
+.mesa-wrap { display: grid !important; grid-template-columns: 1.45fr 1fr; grid-template-rows: auto 1fr; column-gap: 80px; row-gap: 30px; }
+.mesa-wrap h2 { grid-column: 1 / -1; }
+.mesa svg { width: 100%; height: auto; max-height: none; }
+.mesa-list { list-style: none; align-self: center; border-top: 1px solid var(--rule); }
+.mesa-list li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 26px 0; border-bottom: 1px solid var(--rule); font-size: 30px; line-height: 1.4; color: var(--ink-2); }
+.mesa-list li .sw { margin-top: 9px; }
+.mesa-list b { color: var(--ink); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -303,24 +312,68 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
 
 <!-- === 05 QUÉ HAY EN LA MESA === -->
 <section class="slide">
-  <div class="wrap" style="gap:44px">
+  <div class="wrap mesa-wrap">
     <h2 class="reveal">¿Qué hay encima de la mesa?</h2>
-    <div class="reveal d1">
-      <div class="desk">
-        <div style="flex:0 0 150px;background:var(--c-sys)">sistema</div>
-        <div style="flex:0 0 230px;background:var(--c-tools)">herramientas</div>
-        <div style="flex:0 0 130px;background:var(--c-rules)">reglas</div>
-        <div style="flex:0 0 90px;background:var(--c-skills);color:var(--ink)">skills</div>
-        <div style="flex:0 0 260px;background:var(--c-chat);color:var(--ink)">conversación</div>
-        <div style="flex:0 0 520px;background:var(--c-out)">archivos y comandos</div>
-        <div class="free">libre</div>
-      </div>
-      <div class="desk-legs"><i></i><i></i></div>
+    <div class="mesa reveal d1">
+      <svg viewBox="0 0 1100 620" aria-label="Mesa de trabajo con lo que hay en el contexto">
+        <!-- back legs -->
+        <rect x="150" y="330" width="22" height="200" style="fill:#3a3b40"/>
+        <rect x="928" y="330" width="22" height="200" style="fill:#3a3b40"/>
+        <!-- tabletop -->
+        <polygon points="130,300 970,300 1080,440 20,440" style="fill:#e3ddd0;stroke:var(--ink);stroke-width:3"/>
+        <polygon points="20,440 1080,440 1080,472 20,472" style="fill:#b9ae98;stroke:var(--ink);stroke-width:3"/>
+        <!-- front legs -->
+        <rect x="60" y="472" width="30" height="148" style="fill:var(--ink)"/>
+        <rect x="1010" y="472" width="30" height="148" style="fill:var(--ink)"/>
+        <!-- sistema: manual -->
+        <rect x="80" y="330" width="110" height="60" rx="6" style="fill:var(--c-sys)"/>
+        <rect x="80" y="318" width="110" height="14" rx="4" style="fill:#3a3b40"/>
+        <!-- herramientas: toolbox -->
+        <path d="M232 318 v-22 h60 v22" style="fill:none;stroke:var(--c-tools);stroke-width:9"/>
+        <rect x="210" y="318" width="104" height="72" rx="8" style="fill:var(--c-tools)"/>
+        <!-- reglas: binder -->
+        <rect x="340" y="250" width="66" height="140" rx="6" style="fill:var(--c-rules)"/>
+        <rect x="352" y="272" width="42" height="26" rx="3" style="fill:#fff;opacity:.85"/>
+        <!-- skills: index cards, only titles on the table -->
+        <rect x="428" y="356" width="70" height="34" rx="4" style="fill:var(--c-skills)"/>
+        <rect x="436" y="340" width="70" height="20" rx="4" style="fill:#b6ccfa"/>
+        <rect x="444" y="326" width="70" height="18" rx="4" style="fill:#d5e1fc"/>
+        <!-- conversación: speech bubbles -->
+        <rect x="540" y="300" width="120" height="44" rx="20" style="fill:var(--c-chat)"/>
+        <rect x="560" y="352" width="100" height="38" rx="18" style="fill:#f6cdbb"/>
+        <rect x="540" y="248" width="90" height="40" rx="18" style="fill:#f6cdbb"/>
+        <!-- archivos y comandos: messy pile -->
+        <g style="fill:var(--c-out);stroke:var(--slide-bg);stroke-width:3">
+          <rect x="690" y="352" width="190" height="40" rx="3"/>
+          <rect x="700" y="314" width="180" height="40" rx="3" transform="rotate(-3 790 334)"/>
+          <rect x="684" y="276" width="190" height="40" rx="3" transform="rotate(2 780 296)"/>
+          <rect x="704" y="238" width="176" height="40" rx="3" transform="rotate(-4 792 258)"/>
+          <rect x="690" y="200" width="186" height="40" rx="3" transform="rotate(3 783 220)"/>
+          <rect x="708" y="162" width="170" height="40" rx="3" transform="rotate(-2 793 182)"/>
+          <rect x="694" y="124" width="180" height="40" rx="3" transform="rotate(4 784 144)"/>
+          <rect x="890" y="356" width="60" height="34" rx="3" transform="rotate(12 920 373)"/>
+        </g>
+        <!-- libre -->
+        <text x="985" y="422" text-anchor="middle" style="font:400 22px var(--mono);fill:var(--ink-3)">libre</text>
+        <!-- labels above each item, colored like the item -->
+        <g style="stroke:var(--ink-3);stroke-width:2">
+          <line x1="262" y1="208" x2="262" y2="290"/>
+          <line x1="595" y1="208" x2="595" y2="244"/>
+        </g>
+        <g style="font:500 24px var(--mono)" text-anchor="middle">
+          <text x="135" y="286" style="fill:var(--c-sys)">sistema</text>
+          <text x="262" y="200" style="fill:var(--c-tools)">herramientas</text>
+          <text x="373" y="238" style="fill:var(--c-rules)">reglas</text>
+          <text x="478" y="300" style="fill:#5d86e0">skills</text>
+          <text x="595" y="200" style="fill:#d27b56">conversación</text>
+          <text x="785" y="104" style="fill:var(--c-out)">archivos y comandos</text>
+        </g>
+      </svg>
     </div>
-    <ul class="ruled reveal d2" style="margin-top:-10px">
-      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-sys)"></span>Lo fijo</b><span class="muted">Sus instrucciones, sus herramientas, su archivo de reglas completo y la descripción de cada skill.</span></li>
-      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-chat)"></span>La conversación</b><span class="muted">Lo que ustedes escriben y lo que ella responde.</span></li>
-      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-out)"></span>Lo que lee y corre</b><span class="muted">Cada archivo que abrió y cada salida de comando. <b style="color:var(--ink)">Esto es lo que más llena.</b></span></li>
+    <ul class="mesa-list reveal d2">
+      <li><span class="sw" style="background:var(--c-sys)"></span><span><b>Lo fijo.</b> Sus instrucciones y herramientas, su archivo de reglas completo y la descripción de cada skill.</span></li>
+      <li><span class="sw" style="background:var(--c-chat)"></span><span><b>La conversación.</b> Lo que ustedes escriben y lo que ella responde.</span></li>
+      <li><span class="sw" style="background:var(--c-out)"></span><span><b>Lo que lee y corre.</b> Cada archivo que abrió y cada salida de comando. <b>Esto es lo que más llena.</b></span></li>
     </ul>
   </div>
   <div class="foot"><span>La mesa</span><span>05</span></div>
@@ -332,12 +385,12 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
     <h2 class="reveal">Demo: <span class="mono">/context</span> muestra la mesa.</h2>
     <div class="grids reveal d1">
       <div class="grid-box">
-        <h3>Sesión nueva <span>24k / 200k</span></h3>
-        <div class="tgrid" data-fill="sys:4,tools:16,rules:2,skills:1,chat:1"></div>
+        <h3>Sesión nueva <span>40k / 1M</span></h3>
+        <div class="tgrid" data-fill="sys:1,tools:4,rules:1,skills:1,chat:1"></div>
       </div>
       <div class="grid-box">
-        <h3>Sesión de todo el día <span>156k / 200k</span></h3>
-        <div class="tgrid" data-fill="sys:4,tools:16,rules:2,skills:1,chat:18,out:115"></div>
+        <h3>Sesión de todo el día <span>640k / 1M</span></h3>
+        <div class="tgrid" data-fill="sys:1,tools:4,rules:1,skills:1,chat:20,out:101"></div>
       </div>
     </div>
     <div class="legend reveal d2">
@@ -347,7 +400,7 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
       <span><i class="sw" style="background:var(--c-skills)"></i>skills</span>
       <span><i class="sw" style="background:var(--c-chat)"></i>conversación</span>
       <span><i class="sw" style="background:var(--c-out)"></i>archivos y comandos</span>
-      <span style="margin-left:auto" class="src-note">Cada cuadro, unos 1.000 tokens. Números de ejemplo.</span>
+      <span style="margin-left:auto" class="src-note">Ventana de 1M. Cada cuadro, unos 5.000 tokens. Números de ejemplo.</span>
     </div>
   </div>
   <div class="foot"><span>Demo 1 · /context</span><span>06</span></div>
@@ -432,8 +485,8 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
     <h2 class="reveal">Demo: la misma pregunta, en dos sesiones.</h2>
     <p class="prompt reveal d1">¿Qué hace la función <span class="mono">totalPorCategoria</span>?</p>
     <div class="bars reveal d2">
-      <div class="bar-row"><span class="lbl">Sesión nueva</span><div class="bar-track"><i class="new" style="flex:0 0 14%"></i></div><span class="val">≈ 24k</span></div>
-      <div class="bar-row"><span class="lbl">Sesión llena</span><div class="bar-track"><i style="flex:0 0 18%"></i><i class="tool" style="flex:0 0 72%"></i></div><span class="val">≈ 156k</span></div>
+      <div class="bar-row"><span class="lbl">Sesión nueva</span><div class="bar-track"><i class="new" style="flex:0 0 5%"></i></div><span class="val">≈ 40k</span></div>
+      <div class="bar-row"><span class="lbl">Sesión llena</span><div class="bar-track"><i style="flex:0 0 18%"></i><i class="tool" style="flex:0 0 72%"></i></div><span class="val">≈ 640k</span></div>
     </div>
     <p class="lead reveal d3">La respuesta es igual. El consumo, no.</p>
   </div>
@@ -456,8 +509,8 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
 <!-- === 14 VENTANA LLENA === -->
 <section class="slide dark statement">
   <div class="wrap" style="justify-content:center;gap:56px">
-    <h2 class="reveal">Mucho antes de llenarse la mesa, la IA ya rinde peor.</h2>
-    <p class="lead reveal d1">Con tanto encima se distrae y pierde de vista lo del principio. Por eso "se le olvidan" las reglas en conversaciones largas.</p>
+    <h2 class="reveal">La mesa ahora es de 1M. Mucho antes de llenarse, la IA ya rinde peor.</h2>
+    <p class="lead reveal d1">Con tanto encima se distrae y pierde de vista lo del principio. Por eso "se le olvidan" las reglas en conversaciones largas. Y una mesa más grande también es más para releer en cada mensaje.</p>
   </div>
   <div class="foot"><span>Ventana llena</span><span>14</span></div>
 </section>
@@ -506,7 +559,7 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
         <p class="muted">Para compactar, la IA tiene que leer toda la conversación. Limpiar no le cuesta nada.</p>
       </div>
     </div>
-    <p class="hint reveal d2">Para no perder nada: <code>/rename</code> antes de limpiar, y <code>/resume</code> para volver después.</p>
+    <p class="hint reveal d2"><code>/clear</code> no borra: la anterior queda en <code>/resume</code>. Con <code>/rename</code> le ponen nombre.</p>
   </div>
   <div class="foot"><span>Compactación</span><span>16</span></div>
 </section>
@@ -533,7 +586,7 @@ body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); 
       <div class="habit"><span class="n">02</span><b>Pedidos específicos</b><span>"Mejora el código" lee todo el repo. "Agrega validación al formulario de <code>App.tsx</code>" lee un archivo.</span></div>
       <div class="habit"><span class="n">03</span><b>Nada de logs enteros</b><span>Peguen el error, no las 2.000 líneas.</span></div>
       <div class="habit"><span class="n">04</span><b>Reglas cortas</b><span>Entran en cada mensaje. Menos de 200 líneas; lo especializado va a una skill.</span></div>
-      <div class="habit"><span class="n">05</span><b>Cortar a tiempo</b><span>¿Va por mal camino? <code>Esc</code> y corregir, o <code>/rewind</code> para volver atrás.</span></div>
+      <div class="habit"><span class="n">05</span><b>Cortar a tiempo</b><span>¿Va por mal camino? <code>Esc</code> y corregir, o <code>/rewind</code> para volver a un mensaje anterior.</span></div>
       <div class="habit"><span class="n">06</span><b>Delegar lo ruidoso</b><span>Tests o documentación en un subagente: el ruido se queda allá. Sesión 4.</span></div>
     </div>
   </div>
