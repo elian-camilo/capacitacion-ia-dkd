@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La IA no se acuerda · DKD sesión 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   THEME
+   Neutral, sober, one accent. Co-branded deck:
+   Carlos René Angarita y Elian Camilo Angarita.
+   =========================================== */
+:root {
+  --stage-bg: #d8d6d1;
+  --slide-bg: #f6f5f2;
+  --ink: #17181b;
+  --ink-2: #4b4e55;
+  --ink-3: #8a8d93;
+  --rule: #d9d7d1;
+  --panel: #ffffff;
+  --code-bg: #1b1c1f;
+  --code-ink: #e7e5e0;
+  --code-dim: #8b8e94;
+  --accent: #1d5bd6;
+  --font: 'Geist', 'Helvetica Neue', sans-serif;
+  --mono: 'Geist Mono', 'Courier New', monospace;
+  --pad-x: 140px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === FIXED STAGE (viewport-base.css, full) === */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; background: var(--slide-bg, #fff); }
+.slide { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; display: block; visibility: hidden; opacity: 0; pointer-events: none; background: var(--slide-bg, #fff); }
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+.deck-controls { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 1000; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+  .deck-viewport { position: static; overflow: visible; background: #fff; }
+  .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+  .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .deck-controls, .notes-panel, .counter { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* === BASE SLIDE TYPOGRAPHY === */
+.slide { font-family: var(--font); color: var(--ink); }
+.slide .notes { display: none; }
+.wrap { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 120px; bottom: 150px; display: flex; flex-direction: column; }
+h1 { font-weight: 700; font-size: 150px; line-height: 0.95; letter-spacing: -0.045em; }
+h2 { font-weight: 600; font-size: 76px; line-height: 1.04; letter-spacing: -0.03em; max-width: 1400px; }
+h3 { font-weight: 600; font-size: 40px; line-height: 1.15; letter-spacing: -0.015em; }
+p, li, td, th { font-size: 34px; line-height: 1.4; }
+.lead { font-size: 44px; line-height: 1.3; color: var(--ink-2); max-width: 1300px; letter-spacing: -0.01em; }
+.muted { color: var(--ink-2); }
+.accent { color: var(--accent); }
+.mono { font-family: var(--mono); }
+
+/* Running footer: same on every content slide */
+.foot { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 64px; display: flex; justify-content: space-between; font-size: 22px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 20px; }
+
+/* Thin-ruled lists instead of cards */
+.ruled { list-style: none; border-top: 1px solid var(--rule); }
+.ruled li { display: grid; grid-template-columns: 360px 1fr; gap: 48px; padding: 30px 0; border-bottom: 1px solid var(--rule); }
+.ruled li b { font-weight: 600; }
+.ruled.wide li { grid-template-columns: 90px 1fr; }
+.ruled .n { font-family: var(--mono); color: var(--accent); font-size: 30px; padding-top: 4px; }
+
+/* Plain tables with rules */
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-weight: 500; font-size: 24px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 24px 18px 0; border-bottom: 2px solid var(--ink); }
+td { padding: 24px 24px 24px 0; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 32px; }
+td.code { font-family: var(--mono); font-size: 28px; }
+table.compact td { padding-top: 16px; padding-bottom: 16px; }
+tr.hl td { font-weight: 600; }
+tr.hl td:first-child { color: var(--accent); }
+
+/* Editor window with real file content */
+.editor { background: var(--code-bg); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+.editor .bar { display: flex; align-items: center; gap: 12px; padding: 18px 26px; background: #232428; font-family: var(--mono); font-size: 22px; color: var(--code-dim); }
+.editor .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3b40; display: inline-block; }
+.editor .bar span { margin-left: 14px; }
+.editor pre { font-family: var(--mono); font-size: 25px; line-height: 1.55; color: var(--code-ink); padding: 30px 36px 34px; white-space: pre-wrap; }
+.editor .h { color: #8fb1ff; }
+.editor .c { color: var(--code-dim); }
+
+/* Screenshot slots for the live demo */
+.shot { position: relative; flex: 1; border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+a.shot { text-decoration: none; cursor: pointer; }
+.shot img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; background: var(--panel); }
+.shot .ph { position: absolute; font-family: var(--mono); font-size: 24px; color: var(--ink-3); text-align: center; line-height: 1.5; }
+.shot .tag { position: absolute; z-index: 2; left: 24px; top: 20px; font-family: var(--mono); font-size: 26px; background: var(--ink); color: var(--slide-bg); padding: 6px 16px; border-radius: 6px; }
+
+/* Reveal animation on slide entry */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.slide.visible .reveal { opacity: 1; transform: none; }
+.slide.visible .reveal.d1 { transition-delay: .08s; }
+.slide.visible .reveal.d2 { transition-delay: .16s; }
+.slide.visible .reveal.d3 { transition-delay: .24s; }
+.slide.visible .reveal.d4 { transition-delay: .32s; }
+
+/* === SLIDE-SPECIFIC === */
+.cover .names { position: absolute; left: var(--pad-x); bottom: 96px; display: flex; gap: 120px; font-size: 30px; line-height: 1.35; }
+.cover .names small { display: block; font-size: 22px; color: var(--ink-3); margin-bottom: 8px; letter-spacing: 0.04em; }
+.cover .top { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 96px; display: flex; justify-content: space-between; font-size: 26px; color: var(--ink-2); }
+.cover h1 { position: absolute; left: var(--pad-x); top: 300px; width: 1500px; }
+.cover .lead { position: absolute; left: var(--pad-x); top: 640px; }
+.cover .rule { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 230px; height: 1px; background: var(--rule); }
+
+.dark { background: var(--ink); color: var(--slide-bg); }
+.dark .lead { color: #b9bbc0; }
+.dark .foot { color: #6d7077; border-color: #2c2e33; }
+.statement h2 { font-size: 104px; max-width: 1560px; }
+
+.prompt { font-size: 52px; line-height: 1.3; letter-spacing: -0.015em; max-width: 1500px; border-left: 4px solid var(--accent); padding-left: 48px; }
+.term { font-family: var(--mono); font-size: 28px; color: var(--ink-2); line-height: 1.7; }
+.term b { color: var(--ink); font-weight: 500; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; }
+.cols h3 { padding-bottom: 20px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+.cols ul { list-style: none; }
+.cols li { padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.cols li s { text-decoration: none; color: var(--ink-3); }
+
+/* Context-loading diagram: what the AI reads when a session starts */
+.ctx { display: flex; gap: 0; height: 120px; border: 1px solid var(--ink); border-radius: 10px; overflow: hidden; font-family: var(--mono); font-size: 22px; }
+.ctx div { display: flex; align-items: center; padding: 0 18px; border-right: 1px solid var(--ink); white-space: nowrap; }
+.ctx div:last-child { border-right: none; }
+.ctx .rules { background: var(--ink); color: var(--slide-bg); flex: 0 0 380px; }
+.ctx .sk { background: #e7ecf8; color: var(--accent); flex: 0 0 auto; }
+.ctx .free { flex: 1; color: var(--ink-3); background: var(--panel); }
+.ctx-label { display: flex; justify-content: space-between; font-size: 24px; color: var(--ink-3); margin-top: 16px; }
+
+.steps { list-style: none; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 120px 1fr; padding: 34px 0; border-bottom: 1px solid var(--rule); font-size: 40px; line-height: 1.3; }
+.steps li::before { content: counter(s); font-weight: 700; font-size: 64px; line-height: 1; color: var(--accent); letter-spacing: -0.03em; }
+
+/* === CHROME OUTSIDE THE STAGE === */
+.counter { position: fixed; right: 18px; bottom: 14px; z-index: 1000; font: 500 13px var(--mono); color: #6b6d72; }
+.notes-panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 38vh; overflow: auto; z-index: 1001; background: rgba(23,24,27,.95); color: #e7e5e0; font: 400 16px/1.5 var(--font); padding: 18px 28px 26px; display: none; }
+.notes-panel.on { display: block; }
+.notes-panel b { font-family: var(--mono); font-size: 12px; color: #8b8e94; display: block; margin-bottom: 6px; }
+body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); outline-offset: 4px; }
+/* === SESSION 2: context visuals === */
+:root {
+  --c-sys: #17181b;
+  --c-tools: #6b6e75;
+  --c-rules: #1d5bd6;
+  --c-skills: #8fb1ff;
+  --c-chat: #f2b49b;
+  --c-out: #e2572b;
+  --c-free: #e6e4df;
+}
+.sw { display: inline-block; width: 22px; height: 22px; border-radius: 5px; vertical-align: -3px; margin-right: 14px; }
+
+/* Token grid like /context: one square = 1k tokens of a 200k window */
+.grids { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; }
+.grid-box h3 { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 18px; border-bottom: 2px solid var(--ink); margin-bottom: 28px; }
+.grid-box h3 span { font-family: var(--mono); font-weight: 500; font-size: 30px; color: var(--ink-2); }
+.tgrid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 7px; }
+.tgrid i { aspect-ratio: 1; border-radius: 4px; background: var(--c-free); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px 40px; font-size: 26px; color: var(--ink-2); }
+
+/* Table top: what is on the AI's desk */
+.desk { display: flex; height: 150px; border-radius: 14px; overflow: hidden; border: 2px solid var(--ink); }
+.desk div { display: flex; align-items: flex-end; padding: 16px 18px; font-family: var(--mono); font-size: 21px; color: #fff; white-space: nowrap; }
+.desk .free { flex: 1; background: var(--panel); color: var(--ink-3); }
+.desk-legs { display: flex; justify-content: space-between; padding: 0 60px; }
+.desk-legs i { width: 22px; height: 60px; background: var(--ink); }
+
+/* Tokens split into chips */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 56px; }
+.chips span { padding: 10px 18px; border-radius: 10px; background: #e7ecf8; color: var(--accent); }
+.chips span:nth-child(even) { background: #fbe3d9; color: #b23f17; }
+
+/* Every message resends the whole conversation */
+.bars { display: flex; flex-direction: column; gap: 16px; }
+.bar-row { display: grid; grid-template-columns: 220px 1fr 200px; align-items: center; gap: 30px; font-size: 28px; }
+.bar-row .lbl { color: var(--ink-2); }
+.bar-row .val { font-family: var(--mono); font-size: 26px; color: var(--ink-3); text-align: right; }
+.bar-track { display: flex; height: 54px; gap: 4px; }
+.bar-track i { border-radius: 6px; background: #c9c7c1; }
+.bar-track i.new { background: var(--accent); }
+.bar-track i.tool { background: var(--c-out); }
+
+/* Shared quota: two sources, one tank */
+.quota { display: grid; grid-template-columns: 1fr 1.1fr; gap: 110px; align-items: center; }
+.sources { display: flex; flex-direction: column; gap: 28px; }
+.src { display: flex; align-items: center; gap: 28px; padding: 30px 36px; border: 2px solid var(--ink); border-radius: 14px; background: var(--panel); font-size: 36px; font-weight: 600; }
+.src small { display: block; font-size: 24px; font-weight: 400; color: var(--ink-2); margin-top: 4px; }
+.src .mono { font-size: 30px; color: var(--accent); }
+.tank { display: flex; flex-direction: column; gap: 40px; }
+.gauge p { display: flex; justify-content: space-between; font-size: 30px; margin-bottom: 14px; }
+.gauge p span { font-family: var(--mono); color: var(--ink-2); font-size: 26px; }
+.gauge .track { height: 64px; border-radius: 12px; background: var(--c-free); overflow: hidden; display: flex; }
+.gauge .track i { background: var(--ink); }
+.gauge .track i.cc { background: var(--c-out); }
+
+/* Compaction: long conversation becomes a summary */
+.compact { display: grid; grid-template-columns: 1fr 140px 1fr; align-items: center; gap: 30px; }
+.convo { display: flex; flex-direction: column; gap: 10px; }
+.convo i { height: 26px; border-radius: 6px; background: #c9c7c1; }
+.convo i.u { background: var(--accent); width: 55%; }
+.convo i.t { background: var(--c-out); }
+.arrow { font-size: 110px; color: var(--ink-3); text-align: center; line-height: 1; }
+.summary { background: var(--panel); border: 2px solid var(--ink); border-radius: 14px; padding: 40px 44px; }
+.summary h3 { margin-bottom: 20px; }
+.summary li { list-style: none; font-size: 30px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.summary li s { color: var(--c-out); }
+
+/* Fork: same task or new task */
+.fork { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; }
+.card { border: 2px solid var(--ink); border-radius: 18px; padding: 44px 48px; background: var(--panel); display: flex; flex-direction: column; gap: 22px; }
+.card .cmd { font-family: var(--mono); font-size: 64px; font-weight: 500; letter-spacing: -0.02em; }
+.card .q { font-size: 30px; color: var(--ink-2); }
+.card .cost { font-family: var(--mono); font-size: 26px; padding: 8px 16px; border-radius: 8px; align-self: flex-start; }
+.card .cost.free { background: #dff1e4; color: #1d7a3a; }
+.card .cost.pay { background: #fbe3d9; color: #b23f17; }
+.card p { font-size: 30px; }
+.card.hl { border-color: var(--accent); box-shadow: 0 0 0 4px #e7ecf8; }
+.hint { font-size: 30px; color: var(--ink-2); }
+.hint code, .tip code { font-family: var(--mono); color: var(--ink); background: #ebe9e4; padding: 2px 10px; border-radius: 6px; }
+
+/* Six habits */
+.habits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+.habit { border-top: 3px solid var(--ink); padding-top: 26px; display: flex; flex-direction: column; gap: 14px; }
+.habit .n { font-family: var(--mono); color: var(--accent); font-size: 28px; }
+.habit b { font-size: 38px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
+.habit span { font-size: 27px; color: var(--ink-2); line-height: 1.4; }
+.habit code { font-family: var(--mono); font-size: 25px; color: var(--ink); background: #ebe9e4; padding: 1px 8px; border-radius: 5px; }
+
+/* Before/after specific request */
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+.vs .side { padding: 34px 40px; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); }
+.vs .side .k { font-family: var(--mono); font-size: 24px; color: var(--ink-3); margin-bottom: 16px; }
+
+.tip { font-size: 30px; color: var(--ink-2); }
+.src-note { font-size: 22px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- === 01 PORTADA === -->
+<section class="slide cover">
+  <div class="top reveal"><span>Capacitación de IA · Sesión 2</span><span>DKD · Contexto</span></div>
+  <h1 class="reveal d1">La IA no se acuerda.<br>Relee.</h1>
+  <p class="lead reveal d2">Contexto, tokens y compactación: por qué se le olvidan las cosas y por qué se les acaba el cupo.</p>
+  <div class="rule"></div>
+  <div class="names reveal d3">
+    <div><small>Con</small>Carlos René Angarita Sanguino</div>
+    <div><small>&nbsp;</small>Elian Camilo Angarita Sanguino</div>
+  </div>
+</section>
+
+<!-- === 02 REPASO === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Primero, la tarea. ¿Cómo les fue con su archivo de reglas?</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span>Una vez en que la IA no respetó una regla.</span></li>
+      <li><span class="n">02</span><span>Algo que tuvieron que repetirle a mano.</span></li>
+    </ul>
+    <p class="lead reveal d2">Anotamos los casos. Varios se explican hoy.</p>
+  </div>
+  <div class="foot"><span>Repaso</span><span>02</span></div>
+</section>
+
+<!-- === 03 PREGUNTA DE ARRANQUE === -->
+<section class="slide">
+  <div class="wrap" style="justify-content:center;gap:70px">
+    <div class="cols reveal">
+      <div><p class="muted" style="font-size:26px;margin-bottom:24px">Pregunta 1</p><p style="font-size:54px;line-height:1.2;letter-spacing:-0.02em;font-weight:600">En una conversación larga, ¿la IA empezó a responder peor o se le olvidó algo del principio?</p></div>
+      <div><p class="muted" style="font-size:26px;margin-bottom:24px">Pregunta 2</p><p style="font-size:54px;line-height:1.2;letter-spacing:-0.02em;font-weight:600">¿Alguien se ha quedado sin uso de Claude a mitad del día?</p></div>
+    </div>
+    <p class="lead reveal d1">Las dos tienen <span class="accent">la misma causa</span>.</p>
+  </div>
+  <div class="foot"><span>Arranque</span><span>03</span></div>
+</section>
+
+<!-- === 04 IDEA CENTRAL === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">El contexto es la mesa de trabajo de la IA.</h2>
+    <p class="lead reveal d1">Todo lo que "sabe" en una conversación está encima de esa mesa. Y la mesa tiene tamaño fijo.</p>
+  </div>
+  <div class="foot"><span>La idea de hoy</span><span>04</span></div>
+</section>
+
+<!-- === 05 QUÉ HAY EN LA MESA === -->
+<section class="slide">
+  <div class="wrap" style="gap:44px">
+    <h2 class="reveal">¿Qué hay encima de la mesa?</h2>
+    <div class="reveal d1">
+      <div class="desk">
+        <div style="flex:0 0 150px;background:var(--c-sys)">sistema</div>
+        <div style="flex:0 0 230px;background:var(--c-tools)">herramientas</div>
+        <div style="flex:0 0 130px;background:var(--c-rules)">reglas</div>
+        <div style="flex:0 0 90px;background:var(--c-skills);color:var(--ink)">skills</div>
+        <div style="flex:0 0 260px;background:var(--c-chat);color:var(--ink)">conversación</div>
+        <div style="flex:0 0 520px;background:var(--c-out)">archivos y comandos</div>
+        <div class="free">libre</div>
+      </div>
+      <div class="desk-legs"><i></i><i></i></div>
+    </div>
+    <ul class="ruled reveal d2" style="margin-top:-10px">
+      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-sys)"></span>Lo fijo</b><span class="muted">Sus instrucciones, sus herramientas, su archivo de reglas completo y la descripción de cada skill.</span></li>
+      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-chat)"></span>La conversación</b><span class="muted">Lo que ustedes escriben y lo que ella responde.</span></li>
+      <li style="padding:18px 0"><b><span class="sw" style="background:var(--c-out)"></span>Lo que lee y corre</b><span class="muted">Cada archivo que abrió y cada salida de comando. <b style="color:var(--ink)">Esto es lo que más llena.</b></span></li>
+    </ul>
+  </div>
+  <div class="foot"><span>La mesa</span><span>05</span></div>
+</section>
+
+<!-- === 06 DEMO /context === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">Demo: <span class="mono">/context</span> muestra la mesa.</h2>
+    <div class="grids reveal d1">
+      <div class="grid-box">
+        <h3>Sesión nueva <span>24k / 200k</span></h3>
+        <div class="tgrid" data-fill="sys:4,tools:16,rules:2,skills:1,chat:1"></div>
+      </div>
+      <div class="grid-box">
+        <h3>Sesión de todo el día <span>156k / 200k</span></h3>
+        <div class="tgrid" data-fill="sys:4,tools:16,rules:2,skills:1,chat:18,out:115"></div>
+      </div>
+    </div>
+    <div class="legend reveal d2">
+      <span><i class="sw" style="background:var(--c-sys)"></i>sistema</span>
+      <span><i class="sw" style="background:var(--c-tools)"></i>herramientas</span>
+      <span><i class="sw" style="background:var(--c-rules)"></i>reglas</span>
+      <span><i class="sw" style="background:var(--c-skills)"></i>skills</span>
+      <span><i class="sw" style="background:var(--c-chat)"></i>conversación</span>
+      <span><i class="sw" style="background:var(--c-out)"></i>archivos y comandos</span>
+      <span style="margin-left:auto" class="src-note">Cada cuadro, unos 1.000 tokens. Números de ejemplo.</span>
+    </div>
+  </div>
+  <div class="foot"><span>Demo 1 · /context</span><span>06</span></div>
+</section>
+
+<!-- === 07 FRASE DEMO 1 === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">No escribimos casi nada. La mesa se llenó con lo que la IA leyó y ejecutó.</h2>
+  </div>
+  <div class="foot"><span>Demo 1 · /context</span><span>07</span></div>
+</section>
+
+<!-- === 08 TOKENS === -->
+<section class="slide">
+  <div class="wrap" style="gap:60px">
+    <h2 class="reveal">El token: la unidad en que se mide (y se cobra) el texto.</h2>
+    <div class="chips reveal d1">
+      <span>Agre</span><span>ga</span><span>&nbsp;valid</span><span>ación</span><span>&nbsp;al</span><span>&nbsp;formul</span><span>ario</span>
+    </div>
+    <ul class="ruled wide reveal d2">
+      <li><span class="n">≈</span><span>Un pedazo de palabra, más o menos. Esta frase son unos 7 tokens.</span></li>
+      <li><span class="n">es</span><span>El español suele gastar algo más que el inglés para decir lo mismo.</span></li>
+    </ul>
+  </div>
+  <div class="foot"><span>Tokens</span><span>08</span></div>
+</section>
+
+<!-- === 09 RELEE TODO === -->
+<section class="slide">
+  <div class="wrap" style="gap:44px">
+    <h2 class="reveal">En cada mensaje, la herramienta le manda <span class="accent">toda la conversación</span> otra vez.</h2>
+    <div class="bars reveal d1">
+      <div class="bar-row"><span class="lbl">Mensaje 1</span><div class="bar-track"><i class="new" style="flex:0 0 6%"></i></div><span class="val">relee 1</span></div>
+      <div class="bar-row"><span class="lbl">Mensaje 2</span><div class="bar-track"><i style="flex:0 0 6%"></i><i class="new" style="flex:0 0 6%"></i></div><span class="val">relee 2</span></div>
+      <div class="bar-row"><span class="lbl">Mensaje 3</span><div class="bar-track"><i style="flex:0 0 12%"></i><i class="tool" style="flex:0 0 22%"></i><i class="new" style="flex:0 0 6%"></i></div><span class="val">+ archivo</span></div>
+      <div class="bar-row"><span class="lbl">Mensaje 4</span><div class="bar-track"><i style="flex:0 0 40%"></i><i class="new" style="flex:0 0 6%"></i></div><span class="val">relee todo</span></div>
+      <div class="bar-row"><span class="lbl">Mensaje 5</span><div class="bar-track"><i style="flex:0 0 46%"></i><i class="tool" style="flex:0 0 30%"></i><i class="new" style="flex:0 0 6%"></i></div><span class="val">+ tests</span></div>
+      <div class="bar-row"><span class="lbl">Mensaje 6</span><div class="bar-track"><i style="flex:0 0 82%"></i><i class="new" style="flex:0 0 6%"></i></div><span class="val">"¿y esto?"</span></div>
+    </div>
+    <div class="legend reveal d2">
+      <span><i class="sw" style="background:var(--accent)"></i>lo nuevo que escriben</span>
+      <span><i class="sw" style="background:#c9c7c1"></i>lo que ya estaba y se vuelve a mandar</span>
+      <span><i class="sw" style="background:var(--c-out)"></i>archivos y comandos</span>
+    </div>
+  </div>
+  <div class="foot"><span>Tokens</span><span>09</span></div>
+</section>
+
+<!-- === 10 PREGUNTA CORTA === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">Una pregunta de una línea, en una sesión de todo el día, cuesta como toda la sesión.</h2>
+    <p class="lead reveal d1">Hay caché, que abarata releer lo mismo. Pero sigue contando, y si dejan la sesión quieta un rato largo, se enfría y el siguiente mensaje reprocesa todo.</p>
+  </div>
+  <div class="foot"><span>Tokens</span><span>10</span></div>
+</section>
+
+<!-- === 11 CUPO === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Con licencia no pagan por token. Gastan cupo.</h2>
+    <div class="quota reveal d1">
+      <div class="sources">
+        <div class="src"><span class="mono">claude.ai</span><div>Chat<small>preguntas, documentos</small></div></div>
+        <div class="src" style="border-color:var(--c-out)"><span class="mono" style="color:var(--c-out)">claude</span><div>Claude Code<small>lee archivos, corre comandos</small></div></div>
+        <p class="tip">En los planes de equipo, <b style="color:var(--ink)">es el mismo cupo</b>.</p>
+      </div>
+      <div class="tank">
+        <div class="gauge"><p>Ventana de 5 horas <span>se renueva</span></p><div class="track"><i style="flex:0 0 18%"></i><i class="cc" style="flex:0 0 58%"></i></div></div>
+        <div class="gauge"><p>Ventana semanal <span>se renueva</span></p><div class="track"><i style="flex:0 0 14%"></i><i class="cc" style="flex:0 0 37%"></i></div></div>
+        <p class="tip">Según Anthropic, una sesión de depuración en Claude Code puede gastar más que un día entero de chat.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Consumo</span><span>11</span></div>
+</section>
+
+<!-- === 12 DEMO 2 === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">Demo: la misma pregunta, en dos sesiones.</h2>
+    <p class="prompt reveal d1">¿Qué hace la función <span class="mono">totalPorCategoria</span>?</p>
+    <div class="bars reveal d2">
+      <div class="bar-row"><span class="lbl">Sesión nueva</span><div class="bar-track"><i class="new" style="flex:0 0 14%"></i></div><span class="val">≈ 24k</span></div>
+      <div class="bar-row"><span class="lbl">Sesión llena</span><div class="bar-track"><i style="flex:0 0 18%"></i><i class="tool" style="flex:0 0 72%"></i></div><span class="val">≈ 156k</span></div>
+    </div>
+    <p class="lead reveal d3">La respuesta es igual. El consumo, no.</p>
+  </div>
+  <div class="foot"><span>Demo 2 · pregunta corta, sesión larga</span><span>12</span></div>
+</section>
+
+<!-- === 13 /usage === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal"><span class="mono">/usage</span>: qué les está gastando el cupo.</h2>
+    <ol class="steps reveal d1">
+      <li>Las barras de su ventana de 5 horas y de la semana.</li>
+      <li>Qué es lo que más les está gastando el cupo.</li>
+      <li>Recomendaciones concretas, como recortar el archivo de reglas.</li>
+    </ol>
+  </div>
+  <div class="foot"><span>Demo 2 · /usage</span><span>13</span></div>
+</section>
+
+<!-- === 14 VENTANA LLENA === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">Mucho antes de llenarse la mesa, la IA ya rinde peor.</h2>
+    <p class="lead reveal d1">Con tanto encima se distrae y pierde de vista lo del principio. Por eso "se le olvidan" las reglas en conversaciones largas.</p>
+  </div>
+  <div class="foot"><span>Ventana llena</span><span>14</span></div>
+</section>
+
+<!-- === 15 COMPACTACIÓN === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">Compactar: resumir lo anterior para hacer espacio.</h2>
+    <div class="compact reveal d1">
+      <div class="convo">
+        <i class="u"></i><i style="width:90%"></i><i class="t" style="width:80%"></i><i class="u" style="width:40%"></i><i style="width:96%"></i><i class="t" style="width:100%"></i><i class="t" style="width:70%"></i><i class="u"></i><i style="width:85%"></i><i class="t" style="width:92%"></i><i class="u" style="width:35%"></i><i style="width:75%"></i>
+      </div>
+      <div class="arrow">→</div>
+      <div class="summary">
+        <h3>Resumen</h3>
+        <ul>
+          <li>Se agregó validación al formulario.</li>
+          <li>Los tests pasan.</li>
+          <li><s>La ruta exacta del archivo que tocaron</s></li>
+          <li><s>Por qué descartaron la otra opción</s></li>
+        </ul>
+      </div>
+    </div>
+    <p class="tip reveal d2">Claude Code lo hace solo cuando la conversación se acerca al límite. Es un resumen: <b style="color:var(--ink)">se pierden detalles</b>.</p>
+  </div>
+  <div class="foot"><span>Compactación</span><span>15</span></div>
+</section>
+
+<!-- === 16 /compact vs /clear === -->
+<section class="slide">
+  <div class="wrap" style="gap:44px">
+    <h2 class="reveal">¿Siguen con lo mismo, o cambian de tarea?</h2>
+    <div class="fork reveal d1">
+      <div class="card">
+        <span class="q">Sigo con lo mismo</span>
+        <span class="cmd">/compact</span>
+        <span class="cost pay">petición grande</span>
+        <p>Resume la conversación. Pueden decirle qué conservar:</p>
+        <p class="mono" style="font-size:25px;color:var(--ink-2)">/compact conserva los cambios de código y los resultados de los tests</p>
+      </div>
+      <div class="card hl">
+        <span class="q">Cambio de tarea</span>
+        <span class="cmd">/clear</span>
+        <span class="cost free">gratis</span>
+        <p>Arranca de cero. La mesa queda limpia.</p>
+        <p class="muted">Para compactar, la IA tiene que leer toda la conversación. Limpiar no le cuesta nada.</p>
+      </div>
+    </div>
+    <p class="hint reveal d2">Para no perder nada: <code>/rename</code> antes de limpiar, y <code>/resume</code> para volver después.</p>
+  </div>
+  <div class="foot"><span>Compactación</span><span>16</span></div>
+</section>
+
+<!-- === 17 DEMO 3 === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">Demo: compactar y limpiar.</h2>
+    <ol class="steps reveal d1">
+      <li><span><span class="mono">/compact conserva los cambios de código</span> en la sesión llena.</span></li>
+      <li>Preguntarle un detalle del principio. ¿Lo conservó?</li>
+      <li><span><span class="mono">/clear</span> y <span class="mono">/context</span>: la mesa volvió a estar limpia.</span></li>
+    </ol>
+  </div>
+  <div class="foot"><span>Demo 3 · /compact vs /clear</span><span>17</span></div>
+</section>
+
+<!-- === 18 BUENAS PRÁCTICAS === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Seis hábitos para no llenar la mesa.</h2>
+    <div class="habits reveal d1">
+      <div class="habit"><span class="n">01</span><b>Una tarea por conversación</b><span>¿Cambian de tema? <code>/clear</code>.</span></div>
+      <div class="habit"><span class="n">02</span><b>Pedidos específicos</b><span>"Mejora el código" lee todo el repo. "Agrega validación al formulario de <code>App.tsx</code>" lee un archivo.</span></div>
+      <div class="habit"><span class="n">03</span><b>Nada de logs enteros</b><span>Peguen el error, no las 2.000 líneas.</span></div>
+      <div class="habit"><span class="n">04</span><b>Reglas cortas</b><span>Entran en cada mensaje. Menos de 200 líneas; lo especializado va a una skill.</span></div>
+      <div class="habit"><span class="n">05</span><b>Cortar a tiempo</b><span>¿Va por mal camino? <code>Esc</code> y corregir, o <code>/rewind</code> para volver atrás.</span></div>
+      <div class="habit"><span class="n">06</span><b>Delegar lo ruidoso</b><span>Tests o documentación en un subagente: el ruido se queda allá. Sesión 4.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Buenas prácticas</span><span>18</span></div>
+</section>
+
+<!-- === 19 PRÁCTICA === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">20 minutos, en su sesión real.</h2>
+    <ol class="steps reveal d1">
+      <li><span>Abran su conversación más larga y corran <span class="mono">/context</span>. ¿Qué ocupa más?</span></li>
+      <li><span>Abran <span class="mono">/usage</span>: desglose y recomendaciones.</span></li>
+      <li><span>Apliquen un arreglo: <span class="mono">/clear</span>, recortar sus reglas o apagar un MCP que no usen (<span class="mono">/mcp</span>).</span></li>
+      <li><span>Corran <span class="mono">/context</span> otra vez y comparen.</span></li>
+    </ol>
+  </div>
+  <div class="foot"><span>Práctica</span><span>19</span></div>
+</section>
+
+<!-- === 20 EQUIVALENCIAS === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">¿No usan Claude Code? La regla es la misma.</h2>
+    <table class="reveal d1">
+      <tr><th style="width:28%">Para</th><th style="width:36%">Claude Code</th><th>Chat de Claude (claude.ai)</th></tr>
+      <tr><td>Ver el contexto</td><td class="code">/context</td><td class="muted">la conversación entera es el contexto</td></tr>
+      <tr><td>Ver el consumo</td><td class="code">/usage</td><td class="muted">Configuración › Uso</td></tr>
+      <tr class="hl"><td>Arrancar limpio</td><td class="code">/clear</td><td>Nueva conversación</td></tr>
+      <tr><td>Resumir</td><td class="code">/compact</td><td class="muted">no aplica</td></tr>
+    </table>
+    <p class="tip reveal d2">Un chat de semanas sobre todo lo que se les ocurre es la sesión llena. Una conversación por tema.</p>
+  </div>
+  <div class="foot"><span>Otras herramientas</span><span>20</span></div>
+</section>
+
+<!-- === 21 TAREA === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Para la próxima: dos hábitos.</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span><span class="mono">/clear</span> cada vez que cambien de tarea.</span></li>
+      <li><span class="n">02</span><span>El viernes, abran <span class="mono">/usage</span> y anoten qué les gastó más el cupo.</span></li>
+    </ul>
+    <p class="lead reveal d2">Próxima sesión: darle a la IA un plan claro antes de que escriba código, para que no tenga que adivinar.</p>
+  </div>
+  <div class="foot"><span>Carlos René Angarita · Elian Camilo Angarita</span><span>21</span></div>
+</section>
+
+</main>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="notes-panel" id="notesPanel"></div>
+
+<script>
+/* Fill token grids: data-fill="category:squares,..." over 200 squares */
+document.querySelectorAll('.tgrid').forEach((g) => {
+  const parts = g.dataset.fill.split(',').map((p) => p.split(':'));
+  for (let k = 0; k < 200; k++) g.appendChild(document.createElement('i'));
+  let k = 0;
+  parts.forEach(([c, n]) => { for (let j = 0; j < +n; j++) g.children[k++].style.background = `var(--c-${c})`; });
+});
+</script>
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Keys: arrows / space / PgUp PgDn to move,
+   N = speaker notes, E = edit mode, Ctrl+S = save copy
+   =========================================== */
+class SlidePresentation {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.stage = document.getElementById('deckStage');
+    this.counter = document.getElementById('counter');
+    this.notes = document.getElementById('notesPanel');
+    this.current = 0;
+    this.lastWheel = 0;
+    this.setupScale();
+    this.setupKeys();
+    this.setupTouch();
+    this.setupWheel();
+    const start = parseInt(location.hash.slice(1), 10);
+    this.show(Number.isFinite(start) ? start - 1 : 0);
+  }
+
+  /* Fixed 1920x1080 stage, scaled as a whole */
+  setupScale() {
+    const fit = () => {
+      const f = Math.min(innerWidth / 1920, innerHeight / 1080);
+      this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
+    };
+    fit();
+    addEventListener('resize', fit);
+  }
+
+  setupKeys() {
+    addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.saveCopy(); return; }
+      if (document.body.classList.contains('editing') && e.key !== 'Escape') return;
+      if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+      if (e.key === 'Home') this.show(0);
+      if (e.key === 'End') this.show(this.slides.length - 1);
+      if (e.key.toLowerCase() === 'n') this.notes.classList.toggle('on');
+      if (e.key.toLowerCase() === 'e') this.toggleEdit();
+      if (e.key === 'Escape' && document.body.classList.contains('editing')) this.toggleEdit();
+    });
+  }
+
+  setupTouch() {
+    let x0 = null;
+    addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) this.show(this.current + (dx < 0 ? 1 : -1));
+      x0 = null;
+    });
+  }
+
+  setupWheel() {
+    addEventListener('wheel', (e) => {
+      const now = Date.now();
+      if (now - this.lastWheel < 700 || Math.abs(e.deltaY) < 30) return;
+      this.lastWheel = now;
+      this.show(this.current + (e.deltaY > 0 ? 1 : -1));
+    }, { passive: true });
+  }
+
+  show(i) {
+    this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+    this.slides.forEach((s, k) => {
+      s.classList.toggle('active', k === this.current);
+      s.classList.toggle('visible', k === this.current);
+    });
+    this.counter.textContent = `${this.current + 1} / ${this.slides.length}`;
+    history.replaceState(null, '', `#${this.current + 1}`);
+    const note = this.slides[this.current].querySelector('.notes');
+    this.notes.innerHTML = `<b>NOTAS · ${this.current + 1}</b>${note ? note.textContent : ''}`;
+  }
+
+  /* Inline editing: E toggles, Esc exits */
+  toggleEdit() {
+    const on = document.body.classList.toggle('editing');
+    document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide td').forEach((el) => {
+      el.contentEditable = on ? 'true' : 'false';
+    });
+  }
+
+  /* Ctrl+S downloads the edited deck as a new HTML file */
+  saveCopy() {
+    const wasEditing = document.body.classList.contains('editing');
+    if (wasEditing) this.toggleEdit();
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.download = 'sesion-01.html';
+    a.click();
+    if (wasEditing) this.toggleEdit();
+  }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>
