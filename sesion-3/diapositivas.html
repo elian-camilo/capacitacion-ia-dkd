@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lo que no le dicen · DKD sesión 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   THEME
+   Neutral, sober, one accent. Co-branded deck:
+   Carlos René Angarita y Elian Camilo Angarita.
+   =========================================== */
+:root {
+  --stage-bg: #d8d6d1;
+  --slide-bg: #f6f5f2;
+  --ink: #17181b;
+  --ink-2: #4b4e55;
+  --ink-3: #8a8d93;
+  --rule: #d9d7d1;
+  --panel: #ffffff;
+  --code-bg: #1b1c1f;
+  --code-ink: #e7e5e0;
+  --code-dim: #8b8e94;
+  --accent: #1d5bd6;
+  --font: 'Geist', 'Helvetica Neue', sans-serif;
+  --mono: 'Geist Mono', 'Courier New', monospace;
+  --pad-x: 140px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === FIXED STAGE (viewport-base.css, full) === */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; background: var(--slide-bg, #fff); }
+.slide { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; display: block; visibility: hidden; opacity: 0; pointer-events: none; background: var(--slide-bg, #fff); }
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+.deck-controls { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 1000; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+  .deck-viewport { position: static; overflow: visible; background: #fff; }
+  .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+  .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .deck-controls, .notes-panel, .counter { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* === BASE SLIDE TYPOGRAPHY === */
+.slide { font-family: var(--font); color: var(--ink); }
+.slide .notes { display: none; }
+.wrap { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 120px; bottom: 150px; display: flex; flex-direction: column; }
+h1 { font-weight: 700; font-size: 150px; line-height: 0.95; letter-spacing: -0.045em; }
+h2 { font-weight: 600; font-size: 76px; line-height: 1.04; letter-spacing: -0.03em; max-width: 1400px; }
+h3 { font-weight: 600; font-size: 40px; line-height: 1.15; letter-spacing: -0.015em; }
+p, li, td, th { font-size: 34px; line-height: 1.4; }
+.lead { font-size: 44px; line-height: 1.3; color: var(--ink-2); max-width: 1300px; letter-spacing: -0.01em; }
+.muted { color: var(--ink-2); }
+.accent { color: var(--accent); }
+.mono { font-family: var(--mono); }
+
+/* Running footer: same on every content slide */
+.foot { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 64px; display: flex; justify-content: space-between; font-size: 22px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 20px; }
+
+/* Thin-ruled lists instead of cards */
+.ruled { list-style: none; border-top: 1px solid var(--rule); }
+.ruled li { display: grid; grid-template-columns: 360px 1fr; gap: 48px; padding: 30px 0; border-bottom: 1px solid var(--rule); }
+.ruled li b { font-weight: 600; }
+.ruled.wide li { grid-template-columns: 90px 1fr; }
+.ruled .n { font-family: var(--mono); color: var(--accent); font-size: 30px; padding-top: 4px; }
+
+/* Plain tables with rules */
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-weight: 500; font-size: 24px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 24px 18px 0; border-bottom: 2px solid var(--ink); }
+td { padding: 24px 24px 24px 0; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 32px; }
+td.code { font-family: var(--mono); font-size: 28px; }
+table.compact td { padding-top: 16px; padding-bottom: 16px; }
+tr.hl td { font-weight: 600; }
+tr.hl td:first-child { color: var(--accent); }
+
+/* Editor window with real file content */
+.editor { background: var(--code-bg); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+.editor .bar { display: flex; align-items: center; gap: 12px; padding: 18px 26px; background: #232428; font-family: var(--mono); font-size: 22px; color: var(--code-dim); }
+.editor .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3b40; display: inline-block; }
+.editor .bar span { margin-left: 14px; }
+.editor pre { font-family: var(--mono); font-size: 25px; line-height: 1.55; color: var(--code-ink); padding: 30px 36px 34px; white-space: pre-wrap; }
+.editor .h { color: #8fb1ff; }
+.editor .c { color: var(--code-dim); }
+
+/* Screenshot slots for the live demo */
+.shot { position: relative; flex: 1; border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+a.shot { text-decoration: none; cursor: pointer; }
+.shot img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; background: var(--panel); }
+.shot .ph { position: absolute; font-family: var(--mono); font-size: 24px; color: var(--ink-3); text-align: center; line-height: 1.5; }
+.shot .tag { position: absolute; z-index: 2; left: 24px; top: 20px; font-family: var(--mono); font-size: 26px; background: var(--ink); color: var(--slide-bg); padding: 6px 16px; border-radius: 6px; }
+
+/* Reveal animation on slide entry */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.slide.visible .reveal { opacity: 1; transform: none; }
+.slide.visible .reveal.d1 { transition-delay: .08s; }
+.slide.visible .reveal.d2 { transition-delay: .16s; }
+.slide.visible .reveal.d3 { transition-delay: .24s; }
+.slide.visible .reveal.d4 { transition-delay: .32s; }
+
+/* === SLIDE-SPECIFIC === */
+.cover .names { position: absolute; left: var(--pad-x); bottom: 96px; display: flex; gap: 120px; font-size: 30px; line-height: 1.35; }
+.cover .names small { display: block; font-size: 22px; color: var(--ink-3); margin-bottom: 8px; letter-spacing: 0.04em; }
+.cover .top { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 96px; display: flex; justify-content: space-between; font-size: 26px; color: var(--ink-2); }
+.cover h1 { position: absolute; left: var(--pad-x); top: 300px; width: 1500px; }
+.cover .lead { position: absolute; left: var(--pad-x); top: 640px; }
+.cover .rule { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 230px; height: 1px; background: var(--rule); }
+
+.dark { background: var(--ink); color: var(--slide-bg); }
+.dark .lead { color: #b9bbc0; }
+.dark .foot { color: #6d7077; border-color: #2c2e33; }
+.statement h2 { font-size: 104px; max-width: 1560px; }
+
+.prompt { font-size: 52px; line-height: 1.3; letter-spacing: -0.015em; max-width: 1500px; border-left: 4px solid var(--accent); padding-left: 48px; }
+.term { font-family: var(--mono); font-size: 28px; color: var(--ink-2); line-height: 1.7; }
+.term b { color: var(--ink); font-weight: 500; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; }
+.cols h3 { padding-bottom: 20px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+.cols ul { list-style: none; }
+.cols li { padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.cols li s { text-decoration: none; color: var(--ink-3); }
+
+/* Context-loading diagram: what the AI reads when a session starts */
+.ctx { display: flex; gap: 0; height: 120px; border: 1px solid var(--ink); border-radius: 10px; overflow: hidden; font-family: var(--mono); font-size: 22px; }
+.ctx div { display: flex; align-items: center; padding: 0 18px; border-right: 1px solid var(--ink); white-space: nowrap; }
+.ctx div:last-child { border-right: none; }
+.ctx .rules { background: var(--ink); color: var(--slide-bg); flex: 0 0 380px; }
+.ctx .sk { background: #e7ecf8; color: var(--accent); flex: 0 0 auto; }
+.ctx .free { flex: 1; color: var(--ink-3); background: var(--panel); }
+.ctx-label { display: flex; justify-content: space-between; font-size: 24px; color: var(--ink-3); margin-top: 16px; }
+
+.steps { list-style: none; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 120px 1fr; padding: 34px 0; border-bottom: 1px solid var(--rule); font-size: 40px; line-height: 1.3; }
+.steps li::before { content: counter(s); font-weight: 700; font-size: 64px; line-height: 1; color: var(--accent); letter-spacing: -0.03em; }
+
+/* === CHROME OUTSIDE THE STAGE === */
+.counter { position: fixed; right: 18px; bottom: 14px; z-index: 1000; font: 500 13px var(--mono); color: #6b6d72; }
+.notes-panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 38vh; overflow: auto; z-index: 1001; background: rgba(23,24,27,.95); color: #e7e5e0; font: 400 16px/1.5 var(--font); padding: 18px 28px 26px; display: none; }
+.notes-panel.on { display: block; }
+.notes-panel b { font-family: var(--mono); font-size: 12px; color: #8b8e94; display: block; margin-bottom: 6px; }
+body.editing [contenteditable="true"] { outline: 2px dashed rgba(29,91,214,.5); outline-offset: 4px; }
+/* === SESSION 3: SDD workshop visuals === */
+:root { --orange: #e2572b; --orange-bg: #fbe3d9; --orange-ink: #b23f17; --blue-bg: #e7ecf8; --green-bg: #dff1e4; --green-ink: #1d7a3a; }
+.pill { display: inline-block; font-family: var(--mono); font-size: 22px; padding: 5px 14px; border-radius: 8px; white-space: nowrap; }
+.pill.guess { background: var(--orange-bg); color: var(--orange-ink); }
+.pill.web { background: var(--blue-bg); color: var(--accent); }
+.pill.cc { background: var(--ink); color: var(--slide-bg); }
+.pill.ok { background: var(--green-bg); color: var(--green-ink); }
+
+/* One-line request vs the questions it leaves open */
+.guess-wrap { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 90px; align-items: center; }
+.req { border: 2px solid var(--ink); border-radius: 18px; background: var(--panel); padding: 44px 48px; }
+.req .k { font-family: var(--mono); font-size: 22px; color: var(--ink-3); margin-bottom: 20px; }
+.req p { font-size: 48px; line-height: 1.25; font-weight: 600; letter-spacing: -0.02em; }
+.qs { list-style: none; border-top: 1px solid var(--rule); }
+.qs li { display: flex; justify-content: space-between; align-items: center; gap: 30px; padding: 22px 0; border-bottom: 1px solid var(--rule); font-size: 34px; }
+
+/* Four-step flow */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 56px; row-gap: 26px; }
+.stage { position: relative; border-top: 4px solid var(--ink); padding-top: 26px; display: flex; flex-direction: column; gap: 14px; }
+.stage:not(.last)::after { content: "→"; position: absolute; right: -46px; top: 22px; font-size: 44px; color: var(--ink-3); }
+.stage .n { font-family: var(--mono); color: var(--accent); font-size: 26px; }
+.stage b { font-size: 68px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.stage .what { font-size: 34px; color: var(--ink); line-height: 1.3; }
+.stage .who { font-size: 28px; color: var(--ink-2); line-height: 1.4; }
+.stage.last { border-top-color: var(--orange); }
+.lane { border-radius: 12px; padding: 18px 26px; font-family: var(--mono); font-size: 24px; display: flex; justify-content: space-between; }
+.lane.web { grid-column: 1 / 4; background: var(--blue-bg); color: var(--accent); }
+.lane.cc { grid-column: 4 / 5; background: var(--ink); color: var(--slide-bg); }
+
+/* Document beside its explanation */
+.doc-wrap { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 80px; align-items: start; }
+.editor pre .ok { color: #7fd49a; }
+.editor pre .o { color: #f2a07f; }
+.side-list { list-style: none; border-top: 1px solid var(--rule); }
+.side-list li { padding: 22px 0; border-bottom: 1px solid var(--rule); font-size: 29px; line-height: 1.35; color: var(--ink-2); }
+.side-list b { display: block; color: var(--ink); font-weight: 600; font-size: 31px; margin-bottom: 4px; }
+
+/* Vague vs verifiable */
+.vague { width: 100%; }
+.vague td { font-size: 34px; padding-top: 28px; padding-bottom: 28px; }
+.vague td:first-child s { color: var(--ink-3); text-decoration-color: var(--orange); text-decoration-thickness: 3px; }
+.vague td.arr { color: var(--ink-3); width: 80px; text-align: center; }
+
+/* Verification checklist */
+.check { list-style: none; border-top: 1px solid var(--rule); }
+.check li { display: grid; grid-template-columns: 70px 1fr auto; align-items: center; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--rule); font-size: 33px; }
+.check .box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: #fff; background: var(--green-ink); }
+.check li.no .box { background: var(--orange); }
+.check li.no { color: var(--ink); }
+
+/* Workshop rounds */
+.ronda { position: absolute; left: var(--pad-x); right: var(--pad-x); top: 120px; bottom: 150px; display: grid; grid-template-columns: 380px 1fr; gap: 100px; }
+.ronda .badge { display: flex; flex-direction: column; gap: 18px; border-right: 1px solid var(--rule); padding-right: 60px; }
+.ronda .badge small { font-family: var(--mono); font-size: 26px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.ronda .badge .big { font-size: 280px; font-weight: 700; line-height: 0.85; letter-spacing: -0.06em; color: var(--accent); }
+.ronda .badge .min { font-family: var(--mono); font-size: 44px; font-weight: 500; }
+.ronda .badge .pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.ronda .body { display: flex; flex-direction: column; gap: 40px; justify-content: center; }
+.ronda .body .editor pre { font-size: 24px; }
+
+/* Pairs */
+.pairs { display: grid; grid-template-columns: 1fr 90px 1fr 90px 1fr; align-items: center; }
+.pairs .p { border: 2px solid var(--ink); border-radius: 18px; background: var(--panel); padding: 36px 40px; display: flex; flex-direction: column; gap: 14px; font-size: 32px; font-weight: 600; }
+.pairs .p span:not(.pill) { font-size: 26px; font-weight: 400; color: var(--ink-2); }
+.pairs .p .pill { align-self: flex-start; }
+.pairs .op { font-size: 64px; text-align: center; color: var(--ink-3); }
+.pairs .p.res { border-color: var(--accent); box-shadow: 0 0 0 4px var(--blue-bg); }
+
+/* Pains: quick idea examples */
+.pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+.pain { border-top: 3px solid var(--ink); padding-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.pain b { font-size: 36px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; }
+.pain span { font-size: 27px; color: var(--ink-2); line-height: 1.4; }
+.filter { display: flex; align-items: center; gap: 26px; border: 2px dashed var(--accent); border-radius: 16px; padding: 28px 36px; font-size: 36px; }
+.filter .mono { color: var(--accent); font-size: 28px; }
+
+.hint code, .tip code { font-family: var(--mono); color: var(--ink); background: #ebe9e4; padding: 2px 10px; border-radius: 6px; }
+.tip { font-size: 30px; color: var(--ink-2); }
+.cols.three { grid-template-columns: repeat(3, 1fr); gap: 60px; }
+.doc-wrap .editor pre { font-size: 23px; line-height: 1.5; padding: 24px 32px 28px; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- === 01 PORTADA === -->
+<section class="slide cover">
+  <div class="top reveal"><span>Capacitación de IA · Sesión 3</span><span>DKD · Taller de SDD</span></div>
+  <h1 class="reveal d1">Lo que no le dicen,<br>la IA lo adivina.</h1>
+  <p class="lead reveal d2">De la idea al código en cuatro pasos. Hoy cada uno trabaja con una idea propia.</p>
+  <div class="rule"></div>
+  <div class="names reveal d3">
+    <div><small>Con</small>Carlos René Angarita Sanguino</div>
+    <div><small>&nbsp;</small>Elian Camilo Angarita Sanguino</div>
+  </div>
+</section>
+
+<!-- === 02 ARRANQUE === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Antes de empezar: abran la conversación de IA más larga que tengan.</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span>¿Cuántos temas distintos hay ahí metidos?</span></li>
+      <li><span class="n">02</span><span>Con Claude Code: corran <span class="mono">/context</span>. Sin él: cuenten a ojo.</span></li>
+    </ul>
+    <p class="lead reveal d2">La tarea de la vez pasada, en 5 minutos.</p>
+  </div>
+  <div class="foot"><span>Arranque</span><span>02</span></div>
+</section>
+
+<!-- === 03 PUENTE === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">La vez pasada: no llenar la mesa. Hoy: qué ponerle encima antes de pedir código.</h2>
+  </div>
+  <div class="foot"><span>De la sesión 2 a la 3</span><span>03</span></div>
+</section>
+
+<!-- === 04 PREGUNTA === -->
+<section class="slide">
+  <div class="wrap" style="justify-content:center;gap:60px">
+    <p class="muted reveal" style="font-size:28px">Manos arriba</p>
+    <p class="reveal d1" style="font-size:76px;line-height:1.12;letter-spacing:-0.03em;font-weight:600;max-width:1550px">¿Le han pedido algo a la IA que funcionó, pero no era lo que querían?</p>
+  </div>
+  <div class="foot"><span>Arranque</span><span>04</span></div>
+</section>
+
+<!-- === 05 EL PEDIDO DE UNA LÍNEA === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Un pedido de una línea deja preguntas abiertas.</h2>
+    <div class="guess-wrap">
+      <div class="req reveal d1"><div class="k">Pedido</div><p>"Agrégale a la caja menor un botón para exportar."</p></div>
+      <ul class="qs reveal d2">
+        <li><span>¿Todo o solo el mes?</span><span class="pill guess">la IA decide</span></li>
+        <li><span>¿Excel, CSV o PDF?</span><span class="pill guess">la IA decide</span></li>
+        <li><span>¿Qué columnas?</span><span class="pill guess">la IA decide</span></li>
+        <li><span>¿Y si no hay gastos?</span><span class="pill guess">la IA decide</span></li>
+        <li><span>¿Abre bien en Excel?</span><span class="pill guess">la IA decide</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Por qué la IA adivina</span><span>05</span></div>
+</section>
+
+<!-- === 06 FRASE === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">La IA escribe código rápido. Lo lento es descubrir que no era eso.</h2>
+  </div>
+  <div class="foot"><span>Por qué la IA adivina</span><span>06</span></div>
+</section>
+
+<!-- === 07 SDD EN 4 PASOS === -->
+<section class="slide">
+  <div class="wrap" style="gap:80px;justify-content:center">
+    <h2 class="reveal">SDD: primero el qué. El código, al final.</h2>
+    <div class="flow reveal d1">
+      <div class="stage"><span class="n">01</span><b>Idea</b><span class="what">Una frase.</span><span class="who">Ustedes.</span></div>
+      <div class="stage"><span class="n">02</span><b>Spec</b><span class="what">Qué debe hacer y cómo sabemos que quedó bien.</span><span class="who">La IA los entrevista, ustedes responden.</span></div>
+      <div class="stage"><span class="n">03</span><b>Plan</b><span class="what">Qué archivos toca y en qué orden.</span><span class="who">La IA propone, ustedes corrigen y aprueban.</span></div>
+      <div class="stage last"><span class="n">04</span><b>Código</b><span class="what">Implementar y revisar contra la spec.</span><span class="who">La IA hace, ustedes verifican.</span></div>
+      <div class="lane web"><span>chat del navegador o Claude Code</span><span>pasos 1 a 3</span></div>
+      <div class="lane cc"><span>Claude Code</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>SDD · spec-driven development</span><span>07</span></div>
+</section>
+
+<!-- === 08 LA SPEC === -->
+<section class="slide">
+  <div class="wrap" style="gap:44px">
+    <h2 class="reveal">La spec: el qué, sin hablar de código.</h2>
+    <div class="doc-wrap">
+      <div class="editor reveal d1">
+        <div class="bar"><i></i><i></i><i></i><span>spec-exportar-mes.md</span></div>
+        <pre><span class="h"># Exportar los gastos del mes</span>
+<span class="h">## Problema</span>
+Contabilidad pide los gastos cada mes y hoy se copian a mano.
+<span class="h">## Para quién</span>
+Quien maneja la caja menor.
+<span class="h">## Criterios de aceptación</span>
+- [ ] Se elige un mes y se descarga en un clic.
+- [ ] Archivo caja-menor-AAAA-MM.csv.
+- [ ] Columnas: fecha, descripción, categoría, valor.
+- [ ] <span class="o">Abre en Excel con tildes y columnas separadas.</span>
+- [ ] <span class="o">Mes sin gastos: botón apagado y un aviso.</span>
+<span class="h">## Fuera de alcance</span>
+PDF. Varios meses a la vez.</pre>
+      </div>
+      <ul class="side-list reveal d2">
+        <li><b>Problema y para quién</b>Por qué vale la pena hacerlo.</li>
+        <li><b>Criterios de aceptación</b>Cada uno se comprueba con un sí o un no.</li>
+        <li><b>Lo naranja</b>Lo que nunca hubiera salido en un pedido de una línea.</li>
+        <li><b>Fuera de alcance</b>Lo que no entra. Evita que la IA se invente extras.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Paso 2 · spec</span><span>08</span></div>
+</section>
+
+<!-- === 09 CRITERIOS COMPROBABLES === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">Un criterio se comprueba con un sí o un no.</h2>
+    <table class="vague reveal d1">
+      <tr><th style="width:38%">Vago</th><th></th><th>Comprobable</th></tr>
+      <tr><td><s>Que sea rápido</s></td><td class="arr">→</td><td>Descarga en menos de 2 segundos con 500 gastos.</td></tr>
+      <tr><td><s>Que se vea bien en Excel</s></td><td class="arr">→</td><td>Abre con tildes y cada dato en su columna.</td></tr>
+      <tr><td><s>Que funcione bien</s></td><td class="arr">→</td><td>Mes sin gastos: botón apagado y un aviso.</td></tr>
+      <tr><td><s>Que sea fácil de usar</s></td><td class="arr">→</td><td>Se exporta en un clic desde la pantalla de gastos.</td></tr>
+    </table>
+  </div>
+  <div class="foot"><span>Paso 2 · spec</span><span>09</span></div>
+</section>
+
+<!-- === 10 EL PLAN === -->
+<section class="slide">
+  <div class="wrap" style="gap:44px">
+    <h2 class="reveal">El plan: el cómo. Lo leen antes de aprobarlo.</h2>
+    <div class="doc-wrap">
+      <div class="editor reveal d1">
+        <div class="bar"><i></i><i></i><i></i><span>plan propuesto por la IA</span></div>
+        <pre><span class="h">Archivos</span>
+  src/features/exportar/exportarCsv.ts      <span class="c">nuevo</span>
+  src/features/exportar/exportarCsv.test.ts <span class="c">nuevo</span>
+  src/features/gastos/App.tsx               <span class="c">botón</span>
+<span class="h">Pasos</span>
+  1. Test con un mes de ejemplo.
+  2. Función que arma el CSV con ; y tildes.
+  3. Selector de mes, botón y descarga.
+  4. npm test y abrirlo en Excel.
+<span class="h">Dudas</span>
+  <span class="o">¿El valor va como $ 12.000 o como 12000?</span></pre>
+      </div>
+      <ul class="side-list reveal d2">
+        <li><b>Modo plan</b>En Claude Code, <span class="mono">Shift+Tab</span> hasta "plan mode": propone sin tocar nada.</li>
+        <li><b>En el chat</b>Pídanlo explícito: "no escribas código todavía".</li>
+        <li><b>Antes de aprobar</b>Encuéntrenle al menos una cosa que corregir.</li>
+        <li><b>Las dudas</b>Se responden en la spec, no al aire.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Paso 3 · plan</span><span>10</span></div>
+</section>
+
+<!-- === 11 CONTRATO === -->
+<section class="slide dark statement">
+  <div class="wrap" style="justify-content:center;gap:56px">
+    <h2 class="reveal">La spec es el contrato.</h2>
+    <p class="lead reveal d1">Si algo cambia, primero se cambia la spec. Después, el código.</p>
+  </div>
+  <div class="foot"><span>La idea de hoy</span><span>11</span></div>
+</section>
+
+<!-- === 12 VERIFICAR === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">Al final, se revisa criterio por criterio. No a ojo.</h2>
+    <ul class="check reveal d1">
+      <li><span class="box">✓</span><span>Se elige un mes y se descarga en un clic.</span><span class="pill ok">cumple</span></li>
+      <li><span class="box">✓</span><span>Archivo caja-menor-AAAA-MM.csv.</span><span class="pill ok">cumple</span></li>
+      <li><span class="box">✓</span><span>Columnas: fecha, descripción, categoría, valor.</span><span class="pill ok">cumple</span></li>
+      <li class="no"><span class="box">✗</span><span>Abre en Excel con tildes y columnas separadas.</span><span class="pill guess">se corrige</span></li>
+      <li><span class="box">✓</span><span>Mes sin gastos: botón apagado y un aviso.</span><span class="pill ok">cumple</span></li>
+    </ul>
+    <p class="tip reveal d2">No se discute si quedó "bien": se mira qué criterio no cumple y se le pide eso.</p>
+  </div>
+  <div class="foot"><span>Paso 4 · código y verificación</span><span>12</span></div>
+</section>
+
+<!-- === 13 DEMO === -->
+<section class="slide">
+  <div class="wrap" style="gap:40px">
+    <h2 class="reveal">Demo: el camino completo, en la caja menor.</h2>
+    <ol class="steps reveal d1">
+      <li>Idea: "exportar los gastos del mes".</li>
+      <li>En el chat, el prompt de entrevista. La IA pregunta, respondemos.</li>
+      <li><span>En Claude Code, modo plan (<span class="mono">Shift+Tab</span>) con la spec. Corregimos algo.</span></li>
+      <li>Aprobar, implementar y revisar contra los criterios.</li>
+    </ol>
+  </div>
+  <div class="foot"><span>Demo · caja menor</span><span>13</span></div>
+</section>
+
+<!-- === 14 RONDA 1 === -->
+<section class="slide">
+  <div class="ronda">
+    <div class="badge reveal"><small>Ronda</small><span class="big">1</span><span class="min">10 min</span><div class="pills"><span class="pill web">papel o chat</span></div></div>
+    <div class="body">
+      <h2 class="reveal d1">La idea: algo pequeño que les duela en el trabajo.</h2>
+      <div class="pains reveal d2">
+        <div class="pain"><b>Un reporte a mano</b><span>Lo arman cada semana copiando datos.</span></div>
+        <div class="pain"><b>Una revisión a ojo</b><span>Validan algo que una regla podría revisar.</span></div>
+        <div class="pain"><b>Un formato repetido</b><span>Copian y pegan la misma estructura.</span></div>
+      </div>
+      <div class="filter reveal d3"><span class="mono">filtro</span><span>¿Se termina en un día? Si no, quédense con un pedazo.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Taller · ronda 1</span><span>14</span></div>
+</section>
+
+<!-- === 15 RONDA 2 === -->
+<section class="slide">
+  <div class="ronda">
+    <div class="badge reveal"><small>Ronda</small><span class="big">2</span><span class="min">25 min</span><div class="pills"><span class="pill web">chat</span><span class="pill cc">Claude Code</span></div></div>
+    <div class="body">
+      <h2 class="reveal d1" style="font-size:64px">La spec: la IA los entrevista.</h2>
+      <div class="editor reveal d2">
+        <div class="bar"><i></i><i></i><i></i><span>prompt de entrevista</span></div>
+        <pre>Quiero construir esto: <span class="o">&lt;tu idea en una frase&gt;</span>.
+
+Antes de escribir código, entrevístame. Hazme preguntas de una
+en una hasta que tengas claro qué hay que hacer, para quién y
+cómo sabremos que quedó bien. No propongas soluciones técnicas.
+
+Al terminar, escribe la spec: problema, para quién, qué debe
+hacer, criterios de aceptación comprobables, fuera de alcance
+y dudas abiertas.</pre>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Taller · ronda 2</span><span>15</span></div>
+</section>
+
+<!-- === 16 RONDA 3 === -->
+<section class="slide">
+  <div class="ronda">
+    <div class="badge reveal"><small>Ronda</small><span class="big">3</span><span class="min">15 min</span><div class="pills"><span class="pill web">chat</span><span class="pill cc">modo plan</span></div></div>
+    <div class="body">
+      <h2 class="reveal d1" style="font-size:64px">El plan: léanlo y corríjanle algo.</h2>
+      <div class="editor reveal d2">
+        <div class="bar"><i></i><i></i><i></i><span>prompt de plan</span></div>
+        <pre>Esta es la spec: <span class="o">&lt;pegar spec&gt;</span>.
+
+No escribas código todavía. Propón un plan:
+- qué archivos crearías o cambiarías,
+- los pasos en orden, cada uno pequeño,
+- cómo vas a comprobar cada criterio de aceptación,
+- qué riesgos o dudas ves.</pre>
+      </div>
+      <p class="tip reveal d3">¿No tienen código propio? Pidan el plan igual: qué haría y en qué orden.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Taller · ronda 3</span><span>16</span></div>
+</section>
+
+<!-- === 17 RONDA 4 === -->
+<section class="slide">
+  <div class="ronda">
+    <div class="badge reveal"><small>Ronda</small><span class="big">4</span><span class="min">20 min</span><div class="pills"><span class="pill cc">Claude Code</span></div></div>
+    <div class="body">
+      <h2 class="reveal d1" style="font-size:64px">El código, en parejas.</h2>
+      <div class="pairs reveal d2">
+        <div class="p"><span class="pill cc">tiene Claude Code</span>Persona A</div>
+        <div class="op">+</div>
+        <div class="p"><span class="pill web">usa el navegador</span>Persona B</div>
+        <div class="op">=</div>
+        <div class="p res">Una spec<span>modo plan, aprobar, código y revisar los criterios.</span></div>
+      </div>
+      <p class="tip reveal d3">Si no alcanza el tiempo, no importa: lo valioso de hoy es la spec.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Taller · ronda 4</span><span>17</span></div>
+</section>
+
+<!-- === 18 CHECKLIST === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">¿Su spec está lista? Cuatro preguntas.</h2>
+    <ol class="steps reveal d1">
+      <li>¿Cada criterio se comprueba con un sí o un no?</li>
+      <li>¿Dice qué NO entra?</li>
+      <li>¿Alguien que no estuvo en la conversación entendería qué hacer?</li>
+      <li>¿Se termina en un día?</li>
+    </ol>
+  </div>
+  <div class="foot"><span>Checklist</span><span>18</span></div>
+</section>
+
+<!-- === 19 EQUIVALENCIAS === -->
+<section class="slide">
+  <div class="wrap" style="gap:50px">
+    <h2 class="reveal">¿Solo usan el navegador? Casi todo funciona igual.</h2>
+    <table class="reveal d1">
+      <tr><th style="width:28%">Para</th><th style="width:36%">Claude Code</th><th>Chat de Claude (claude.ai)</th></tr>
+      <tr><td>Entrevista y spec</td><td>igual, en la conversación</td><td>igual</td></tr>
+      <tr><td>Plan sin tocar código</td><td class="code">Shift+Tab · plan mode</td><td>"No escribas código todavía"</td></tr>
+      <tr class="hl"><td>Implementar</td><td>aprobar el plan</td><td class="muted">copiar el código a mano</td></tr>
+    </table>
+    <p class="tip reveal d2">El último paso es donde Claude Code hace la diferencia: escribe y prueba en su proyecto.</p>
+  </div>
+  <div class="foot"><span>Otras herramientas</span><span>19</span></div>
+</section>
+
+<!-- === 20 TAREA === -->
+<section class="slide">
+  <div class="wrap" style="gap:56px">
+    <h2 class="reveal">Para la próxima: su spec, terminada y usada.</h2>
+    <ul class="ruled wide reveal d1">
+      <li><span class="n">01</span><span>Terminen la spec de hoy y úsenla en una tarea real de la semana.</span></li>
+      <li><span class="n">02</span><span>Tráiganla a la sesión 4.</span></li>
+    </ul>
+    <p class="lead reveal d2">Próxima sesión: repartir el trabajo entre varios agentes. Uno de ellos va a revisar el código contra su spec.</p>
+  </div>
+  <div class="foot"><span>Carlos René Angarita · Elian Camilo Angarita</span><span>20</span></div>
+</section>
+
+</main>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="notes-panel" id="notesPanel"></div>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Keys: arrows / space / PgUp PgDn to move,
+   N = speaker notes, E = edit mode, Ctrl+S = save copy
+   =========================================== */
+class SlidePresentation {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.stage = document.getElementById('deckStage');
+    this.counter = document.getElementById('counter');
+    this.notes = document.getElementById('notesPanel');
+    this.current = 0;
+    this.lastWheel = 0;
+    this.setupScale();
+    this.setupKeys();
+    this.setupTouch();
+    this.setupWheel();
+    const start = parseInt(location.hash.slice(1), 10);
+    this.show(Number.isFinite(start) ? start - 1 : 0);
+  }
+
+  /* Fixed 1920x1080 stage, scaled as a whole */
+  setupScale() {
+    const fit = () => {
+      const f = Math.min(innerWidth / 1920, innerHeight / 1080);
+      this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
+    };
+    fit();
+    addEventListener('resize', fit);
+  }
+
+  setupKeys() {
+    addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.saveCopy(); return; }
+      if (document.body.classList.contains('editing') && e.key !== 'Escape') return;
+      if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+      if (e.key === 'Home') this.show(0);
+      if (e.key === 'End') this.show(this.slides.length - 1);
+      if (e.key.toLowerCase() === 'n') this.notes.classList.toggle('on');
+      if (e.key.toLowerCase() === 'e') this.toggleEdit();
+      if (e.key === 'Escape' && document.body.classList.contains('editing')) this.toggleEdit();
+    });
+  }
+
+  setupTouch() {
+    let x0 = null;
+    addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) this.show(this.current + (dx < 0 ? 1 : -1));
+      x0 = null;
+    });
+  }
+
+  setupWheel() {
+    addEventListener('wheel', (e) => {
+      const now = Date.now();
+      if (now - this.lastWheel < 700 || Math.abs(e.deltaY) < 30) return;
+      this.lastWheel = now;
+      this.show(this.current + (e.deltaY > 0 ? 1 : -1));
+    }, { passive: true });
+  }
+
+  show(i) {
+    this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+    this.slides.forEach((s, k) => {
+      s.classList.toggle('active', k === this.current);
+      s.classList.toggle('visible', k === this.current);
+    });
+    this.counter.textContent = `${this.current + 1} / ${this.slides.length}`;
+    history.replaceState(null, '', `#${this.current + 1}`);
+    const note = this.slides[this.current].querySelector('.notes');
+    this.notes.innerHTML = `<b>NOTAS · ${this.current + 1}</b>${note ? note.textContent : ''}`;
+  }
+
+  /* Inline editing: E toggles, Esc exits */
+  toggleEdit() {
+    const on = document.body.classList.toggle('editing');
+    document.querySelectorAll('.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide td').forEach((el) => {
+      el.contentEditable = on ? 'true' : 'false';
+    });
+  }
+
+  /* Ctrl+S downloads the edited deck as a new HTML file */
+  saveCopy() {
+    const wasEditing = document.body.classList.contains('editing');
+    if (wasEditing) this.toggleEdit();
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.download = 'sesion-01.html';
+    a.click();
+    if (wasEditing) this.toggleEdit();
+  }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>

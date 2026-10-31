@@ -11,7 +11,7 @@ demo y plantillas.
 |---|---|---|
 | [sesion-1](sesion-1/) | 2026-10-21 | Reglas y skills |
 | [sesion-2](sesion-2/) | 2026-10-28 | Contexto: ventana, tokens, compactación y consumo |
-| sesion-3 | 2026-11-04 | Desarrollo guiado por specs (SDD) |
+| [sesion-3](sesion-3/) | 2026-11-04 | Desarrollo guiado por specs (SDD) |
 | sesion-4 | 2026-11-11 | Subagentes |
 | sesion-5 | 2026-11-18 | Harness completo y adopción |
 
